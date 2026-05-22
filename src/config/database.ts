@@ -39,5 +39,7 @@ export const AppDataSource = new DataSource({
   entities,
   migrations: [__dirname + '/../migrations/*.{ts,js}'],
   synchronize: process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development', // Sync automatically during tests and dev
-  logging: process.env.NODE_ENV === 'development',
+  logging: process.env.TYPEORM_LOGGING === 'true'
+    ? ['query', 'error', 'schema', 'warn', 'info', 'log']
+    : ['error', 'warn'],
 });

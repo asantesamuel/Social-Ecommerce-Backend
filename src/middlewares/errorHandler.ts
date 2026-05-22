@@ -69,10 +69,15 @@ export function errorHandler(
 
   // PostgreSQL / TypeORM errors
   if (err?.code === '23505') {
+    const isEmailConflict =
+      typeof err?.detail === 'string' && err.detail.includes('(email)');
+
     const response: ErrorResponse = {
       success:   false,
       code:      'CONFLICT',
-      message:   'A record with this value already exists',
+      message:   isEmailConflict
+        ? 'An account with this email already exists'
+        : 'A record with this value already exists',
       timestamp,
       path,
     };
