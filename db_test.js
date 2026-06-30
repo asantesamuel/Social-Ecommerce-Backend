@@ -1,14 +1,37 @@
 const { Client } = require('pg');
-const client = new Client({
-  connectionString: 'postgresql://ecommerce_user:ecommerce_pass@localhost:5432/ecommerce_dev'
-});
-client.connect()
-  .then(() => { console.log("Connected dev successfully!"); client.end(); })
-  .catch(e => console.error("Dev error:", e.message));
+const dotenv = require('dotenv');
 
-const client2 = new Client({
-  connectionString: 'postgresql://ecommerce_user:ecommerce_pass@localhost:5433/ecommerce_test'
-});
-client2.connect()
-  .then(() => { console.log("Connected test successfully!"); client2.end(); })
-  .catch(e => console.error("Test error:", e.message));
+dotenv.config();
+
+async function checkConnection(name, connectionString) {
+  if (!connectionString) {
+    console.log(`${name}: skipped (connection URL is not configured)`);
+    return;
+  }
+
+  const client = new Client({ connectionString });
+
+  try {
+    await client.connect();
+    const result = await client.query(
+      'SELECT current_database() AS database, current_user AS username, version()'
+    );
+    const row = result.rows[0];
+    console.log(`${name}: connected successfully`);
+    console.log(`  database: ${row.database}`);
+    console.log(`  user: ${row.username}`);
+  } catch (error) {
+    console.error(`${name}: connection failed`);
+    console.error(`  ${error.message}`);
+    process.exitCode = 1;
+  } finally {
+    await client.end().catch(() => undefined);
+  }
+}
+
+async function main() {
+  await checkConnection('Development database', process.env.DATABASE_URL);
+  await checkConnection('Test database', process.env.DATABASE_URL_TEST);
+}
+
+main();

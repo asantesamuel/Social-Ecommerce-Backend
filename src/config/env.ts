@@ -9,6 +9,7 @@ const schema = z.object({
 
   // ── Database ─────────────────────────────────────────────────────────────
   DATABASE_URL: z.string().url('DATABASE_URL must be a valid PostgreSQL URL'),
+  DATABASE_URL_TEST: z.string().url('DATABASE_URL_TEST must be a valid PostgreSQL URL').optional(),
 
   // ── JWT ───────────────────────────────────────────────────────────────────
   JWT_ACCESS_SECRET:  z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),

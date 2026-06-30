@@ -1,134 +1,149 @@
 # E-Commerce Backend API
 
-Production-oriented REST API for a multi-role e-commerce platform built with Node.js, Express, TypeScript, TypeORM, and PostgreSQL.
+REST API for a multi-role e-commerce platform built with Node.js, Express,
+TypeScript, TypeORM, and PostgreSQL.
 
-## Purpose
+## Main Features
 
-This API powers a marketplace-style platform where:
+- customer registration, authentication, catalog, cart, checkout, and orders
+- vendor onboarding, verification documents, and product management
+- admin moderation, inventory monitoring, orders, users, and analytics
+- Paystack payments and refunds
+- direct-to-S3 file uploads
+- friendship and shared-cart features
 
-- customers browse products, manage carts, and place orders
-- vendors onboard, pay a one-time fee, upload verification documents, and manage listings
-- admins moderate users and products, inspect orders, and review analytics
+## Requirements
 
-## Core Features
+- Node.js 20 or newer
+- PostgreSQL installed locally
+- pgAdmin 4
+- Redis installed locally for rate limiting
+- Paystack and AWS credentials for payment/upload features
 
-### Customer features
+pgAdmin is a graphical client for PostgreSQL. The PostgreSQL server must also
+be installed and running; opening pgAdmin alone does not start the database.
 
-- account registration and login with JWT auth
-- refresh-token based session renewal
-- product browsing with search, category filters, and pagination
-- cart creation and cart item management
-- checkout with Paystack payment initialization
-- order history and order detail retrieval
-- social features for friend requests and shared carts
+## Local PostgreSQL Setup With pgAdmin 4
 
-### Vendor features
+### 1. Connect to the local PostgreSQL server
 
-- vendor registration during signup
-- Paystack onboarding fee payment
-- document submission for review
-- product creation, updates, and soft deletion
-- vendor-specific order views
+In pgAdmin 4, register or open a server using the values selected during your
+PostgreSQL installation:
 
-### Admin features
+```text
+Host name/address: localhost
+Port: 5432
+Maintenance database: postgres
+Username: postgres
+Password: your local PostgreSQL password
+```
 
-- user account status management
-- platform-wide order inspection
-- low-stock inventory alerts
-- product moderation queue
-- analytics for users, vendors, orders, revenue, and top-selling products
+If pgAdmin cannot connect, confirm that the PostgreSQL Windows service is
+running and that `postgresql.conf` uses port `5432` and listens on localhost.
 
-## Payments
+### 2. Create the databases
 
-The project uses Paystack for payments.
+In pgAdmin, right-click **Databases**, select **Create > Database**, and create:
 
-- customer checkout transactions are initialized through Paystack
-- vendor onboarding fees are initialized through Paystack
-- webhook events are verified with the Paystack signature
-- refunds are issued through the Paystack API
+```text
+ecommerce_db
+ecommerce_test
+```
 
-## File Uploads
+`ecommerce_db` stores local development data. `ecommerce_test` is isolated
+because the Jest setup truncates its tables when tests run.
 
-Uploads use direct-to-S3 flows.
+You can also create them with the pgAdmin Query Tool while connected to the
+`postgres` maintenance database:
 
-1. The client requests a presigned upload URL from `/uploads/presign`
-2. The client uploads the file directly to S3
-3. The client confirms the upload with `/uploads/confirm`
-4. The application stores the resulting key and uses a CDN or signed URL as needed
+```sql
+CREATE DATABASE ecommerce_db;
+CREATE DATABASE ecommerce_test;
+```
 
-Product images use public CDN URLs. Vendor documents use signed access URLs.
+### 3. Configure environment variables
 
-## Main Modules
+Copy `.env.example` to `.env` and replace the password placeholders:
 
-- `auth`: registration, login, refresh, logout
-- `products`: catalog browsing and vendor product management
-- `categories`: category CRUD
-- `cart`: cart retrieval and cart item management
-- `orders`: checkout, order history, vendor orders, refunds
-- `payments`: Paystack webhook handling
-- `vendors`: onboarding fee payments, vendor profiles, and documents
-- `uploads`: S3 presign and confirmation endpoints
-- `admin`: moderation, user management, analytics, and ops views
-- `social`: friendships and shared carts
-- `users`: authenticated user profile endpoints
+```env
+NODE_ENV=development
+DATABASE_URL=postgresql://postgres:YOUR_POSTGRES_PASSWORD@localhost:5432/ecommerce_db
+DATABASE_URL_TEST=postgresql://postgres:YOUR_POSTGRES_PASSWORD@localhost:5432/ecommerce_test
+```
 
-## Tech Stack
+The URL format is:
 
-- Node.js 20+
-- Express 5
-- TypeScript 5
-- TypeORM
-- PostgreSQL 16
-- Redis
-- Paystack
-- AWS S3
-- tsoa + Swagger UI
-- Jest + Supertest
+```text
+postgresql://USERNAME:PASSWORD@HOST:PORT/DATABASE
+```
 
-## Local Development
+URL-encode special characters in the username or password. For example, `@`
+becomes `%40` and `#` becomes `%23`.
 
-### Prerequisites
+### 4. Verify the connection
 
-- Node.js 20+
-- Docker Desktop
-- PostgreSQL via Docker
-- Redis via Docker
-- Paystack account
-- AWS account for S3
+```powershell
+npm run db:check
+```
 
-### Setup
+This checks both configured databases and prints the connected database and
+user without printing the password.
 
-```bash
+### 5. Install dependencies and generate API routes
+
+```powershell
 npm install
-docker-compose up -d postgres redis
-npm run migration:run
 npm run build:routes
+```
+
+In local development, TypeORM synchronizes the registered entities with the
+database when the API starts. Production environments must use migrations and
+must not enable schema synchronization.
+
+### 6. Start the API
+
+```powershell
 npm run dev
 ```
 
-The API runs on `http://localhost:3000`.
+The API runs at `http://localhost:3000` and Swagger UI is available at
+`http://localhost:3000/docs`.
 
-Swagger UI is available at `http://localhost:3000/docs`.
+## How Database Access Works
 
-## Useful Scripts
+1. `src/server.ts` calls `AppDataSource.initialize()` before starting Express.
+2. `src/config/database.ts` reads the PostgreSQL URL from `.env`.
+3. TypeORM maps the classes in `src/entities` to PostgreSQL tables.
+4. Service classes use TypeORM repositories, query builders, and transactions.
+5. Startup stops immediately if PostgreSQL cannot be reached.
 
-```bash
+Development uses `DATABASE_URL`. Tests use `DATABASE_URL_TEST`. Both local
+development modes synchronize entity metadata automatically; production uses
+migrations.
+
+## Useful Commands
+
+```powershell
 npm run dev
 npm run build
 npm run build:routes
-npm run migration:run
-npm run migration:revert
+npm run db:check
 npm test
 npm run test:coverage
 npm run lint
 ```
 
-## Environment Variables
+Migration commands still exist for production migration work, but the current
+local development database was originally created by TypeORM synchronization
+and has not been baselined in the migrations table. Do not run the initial
+migrations against that populated database without first creating a migration
+baseline or using a fresh database.
 
-Important variables include:
+## Important Environment Variables
 
 - `DATABASE_URL`
 - `DATABASE_URL_TEST`
+- `REDIS_URL`
 - `JWT_ACCESS_SECRET`
 - `JWT_REFRESH_SECRET`
 - `PAYSTACK_SECRET_KEY`
@@ -140,13 +155,30 @@ Important variables include:
 - `S3_BUCKET_DOCUMENTS`
 - `CLOUDFRONT_DOMAIN`
 - `FRONTEND_URL`
-- `REDIS_URL`
+- `VENDOR_ONBOARDING_FEE`
+- `TAX_RATE`
 
-## Local Services
+## Troubleshooting
 
-`docker-compose.yml` provides:
+### `ECONNREFUSED 127.0.0.1:5432`
 
-- `postgres` on port `5432`
-- `postgres_test` on port `5433`
-- `pgadmin` on port `8080`
-- `redis` on port `6379`
+PostgreSQL is not listening on port `5432`. Start/restart the PostgreSQL
+service and confirm its configured port.
+
+### `password authentication failed`
+
+The username/password in `DATABASE_URL` does not match the local PostgreSQL
+role. Test the same credentials in pgAdmin and update `.env`.
+
+### `database ecommerce_db does not exist`
+
+Create `ecommerce_db` in pgAdmin, then run the migrations.
+
+### `getaddrinfo ENOTFOUND`
+
+Use `localhost` as the host for a locally installed PostgreSQL server.
+
+### Tests connect to the wrong database
+
+Ensure `DATABASE_URL_TEST` points to `ecommerce_test`, not `ecommerce_db`.
+Tests intentionally clear their database tables.

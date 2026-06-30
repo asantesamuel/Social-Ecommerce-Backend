@@ -15,6 +15,17 @@ import { VendorOnboardingFee } from '../entities/VendorOnboardingFee';
 import { VendorProfile } from '../entities/VendorProfile';
 dotenv.config();
 
+const isTest = process.env.NODE_ENV === 'test';
+const databaseUrl = isTest
+  ? process.env.DATABASE_URL_TEST
+  : process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error(
+    `${isTest ? 'DATABASE_URL_TEST' : 'DATABASE_URL'} is required`
+  );
+}
+
 const entities = [
   Cart,
   CartItem,
@@ -33,12 +44,12 @@ const entities = [
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  url: process.env.NODE_ENV === 'test' 
-    ? process.env.DATABASE_URL_TEST 
-    : process.env.DATABASE_URL,
+  url: databaseUrl,
   entities,
   migrations: [__dirname + '/../migrations/*.{ts,js}'],
-  synchronize: process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development', // Sync automatically during tests and dev
+  // Keep local development convenient while tests use an isolated database.
+  // Production must always use migrations.
+  synchronize: isTest || process.env.NODE_ENV === 'development',
   logging: process.env.TYPEORM_LOGGING === 'true'
     ? ['query', 'error', 'schema', 'warn', 'info', 'log']
     : ['error', 'warn'],
