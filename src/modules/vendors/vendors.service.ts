@@ -1,6 +1,10 @@
 import { AppDataSource }                      from '../../config/database';
 import { VendorProfile, VendorStatus }        from '../../entities/VendorProfile';
-import { VendorDocument, DocumentType }       from '../../entities/VendorDocument';
+import {
+  VendorDocument,
+  DocumentType,
+  DocumentVerificationStatus,
+} from '../../entities/VendorDocument';
 import { VendorOnboardingFee, FeeStatus }     from '../../entities/VendorOnboardingFee';
 import { User, UserRole }                     from '../../entities/User';
 import {
@@ -11,6 +15,7 @@ import {
 import {
   getPresignedDownloadUrl,
 } from '../../config/s3';
+import { env, ONBOARDING_FEE }                from '../../config/env';
 import { JwtPayload }                         from '../../utils/jwt';
 import { UploadsService }                     from '../uploads/uploads.service';
 import {
@@ -96,7 +101,7 @@ export class VendorsService {
     };
   }
 
-  // ── POST /vendors/pay-fee ───────────────────────────────────────────────────
+  // POST /vendors/pay-fee
   async payFee(
     dto:         VendorPayFeeDto,
     currentUser: JwtPayload
@@ -127,8 +132,7 @@ export class VendorsService {
       throw error;
     }
 
-    // Get onboarding fee amount from env
-    const feeAmount = Number(process.env.VENDOR_ONBOARDING_FEE || 5000) / 100;
+    const feeAmount = ONBOARDING_FEE / 100;
 
     // Initialize Paystack transaction for the onboarding fee
     const reference = generateReference(vendor.id);
@@ -190,7 +194,7 @@ export class VendorsService {
     };
   }
 
-  // ── Called by webhook after fee payment confirmed ─────────────────────────
+  // Called by webhook after fee payment confirmed.
   async confirmFeePayment(
     reference:           string,
     _paystackTransactionId: string
@@ -216,11 +220,11 @@ export class VendorsService {
     await this.vendorRepo.save(fee.vendor);
 
     console.log(
-      `Vendor ${fee.vendor.id} fee paid. Status → pending_review`
+      `Vendor ${fee.vendor.id} fee paid. Status -> pending_review`
     );
   }
 
-  // ── POST /vendors/documents ───────────────────────────────────────────────
+  // POST /vendors/documents
   async submitDocument(
     dto:         SubmitDocumentDto,
     currentUser: JwtPayload
@@ -250,7 +254,7 @@ export class VendorsService {
 
     // Build a time-limited signed URL for the document
     const fileUrl = await getPresignedDownloadUrl(
-      process.env.S3_BUCKET_DOCUMENTS as string,
+      env.S3_BUCKET_DOCUMENTS,
       dto.fileKey,
       3600
     );
@@ -259,8 +263,8 @@ export class VendorsService {
       vendor,
       documentType:       dto.documentType as DocumentType,
       fileKey:            dto.fileKey,
-      fileUrl:            dto.fileKey, // store key, generate URL on demand
-      verificationStatus: 'pending'   as any,
+      fileUrl:            dto.fileKey,
+      verificationStatus: DocumentVerificationStatus.PENDING,
     });
     await this.docRepo.save(doc);
 
@@ -273,7 +277,7 @@ export class VendorsService {
     };
   }
 
-  // ── GET /vendors/me ───────────────────────────────────────────────────────
+  // GET /vendors/me
   async getMyProfile(
     currentUser: JwtPayload
   ): Promise<VendorProfileResponseDto> {
@@ -288,7 +292,7 @@ export class VendorsService {
     return this.formatVendor(vendor);
   }
 
-  // ── GET /vendors/me/documents ─────────────────────────────────────────────
+  // GET /vendors/me/documents
   async getMyDocuments(
     currentUser: JwtPayload
   ): Promise<VendorDocumentResponseDto[]> {
@@ -312,7 +316,7 @@ export class VendorsService {
         id:                 doc.id,
         documentType:       doc.documentType,
         fileUrl:            await getPresignedDownloadUrl(
-          process.env.S3_BUCKET_DOCUMENTS as string,
+          env.S3_BUCKET_DOCUMENTS,
           doc.fileKey,
           3600
         ),
@@ -324,7 +328,7 @@ export class VendorsService {
     return formatted;
   }
 
-  // ── Admin: GET /vendors/pending ───────────────────────────────────────────
+  // Admin: GET /vendors/pending
   async getPendingVendors(
     currentUser: JwtPayload,
     page  = 1,
@@ -350,7 +354,7 @@ export class VendorsService {
     };
   }
 
-  // ── Admin: GET /vendors/:id/documents ─────────────────────────────────────
+  // Admin: GET /vendors/:id/documents
   async getVendorDocuments(
     currentUser: JwtPayload,
     vendorId: string
@@ -367,7 +371,7 @@ export class VendorsService {
         id:                 doc.id,
         documentType:       doc.documentType,
         fileUrl:            await getPresignedDownloadUrl(
-          process.env.S3_BUCKET_DOCUMENTS as string,
+          env.S3_BUCKET_DOCUMENTS,
           doc.fileKey,
           3600
         ),
@@ -377,7 +381,7 @@ export class VendorsService {
     );
   }
 
-  // ── Admin: POST /vendors/:id/approve ─────────────────────────────────────
+  // Admin: POST /vendors/:id/approve
   async approveVendor(
     vendorId:    string,
     currentUser: JwtPayload
@@ -419,7 +423,7 @@ export class VendorsService {
     return this.formatVendor(vendor);
   }
 
-  // ── Admin: POST /vendors/:id/reject ──────────────────────────────────────
+  // Admin: POST /vendors/:id/reject
   async rejectVendor(
     vendorId:    string,
     dto:         ReviewVendorDto,
@@ -463,7 +467,7 @@ export class VendorsService {
     return this.formatVendor(vendor);
   }
 
-  // ── Admin: POST /vendors/:id/suspend ─────────────────────────────────────
+  // Admin: POST /vendors/:id/suspend
   async suspendVendor(
     vendorId:    string,
     dto:         ReviewVendorDto,

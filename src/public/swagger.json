@@ -2211,7 +2211,7 @@
 						"description": "File type not allowed"
 					}
 				},
-				"description": "Step 1 of 2 — Request a pre-signed S3 upload URL.\nThe client then PUTs the file directly to S3 using this URL.\nThe file never passes through the API server.",
+				"description": "Step 1 of 2 - Request a pre-signed S3 upload URL.\nThe client then PUTs the file directly to S3 using this URL.\nThe file never passes through the API server.",
 				"tags": [
 					"Uploads"
 				],
@@ -2248,7 +2248,7 @@
 						}
 					}
 				},
-				"description": "Step 2 of 2 — Confirm the upload completed and get the final URL.\nCall this after successfully uploading to S3.",
+				"description": "Step 2 of 2 - Confirm the upload completed and get the final URL.\nCall this after successfully uploading to S3.",
 				"tags": [
 					"Uploads"
 				],
@@ -2596,7 +2596,7 @@
 						"description": "Slug already exists"
 					}
 				},
-				"description": "Create a new product listing — vendor only",
+				"description": "Create a new product listing - vendor only",
 				"tags": [
 					"Products"
 				],
@@ -2616,124 +2616,6 @@
 						}
 					}
 				}
-			}
-		},
-		"/products/{id}": {
-			"get": {
-				"operationId": "GetOne",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ProductResponseDto"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "Product not found"
-					}
-				},
-				"description": "Get a single product by ID",
-				"tags": [
-					"Products"
-				],
-				"security": [],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			},
-			"put": {
-				"operationId": "Update",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/ProductResponseDto"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Not your product"
-					},
-					"404": {
-						"description": "Product not found"
-					}
-				},
-				"description": "Update a product — vendor only, must own the product",
-				"tags": [
-					"Products"
-				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {
-							"schema": {
-								"$ref": "#/components/schemas/UpdateProductDto"
-							}
-						}
-					}
-				}
-			},
-			"delete": {
-				"operationId": "Remove",
-				"responses": {
-					"204": {
-						"description": "Deleted"
-					},
-					"403": {
-						"description": "Not your product"
-					},
-					"404": {
-						"description": "Product not found"
-					}
-				},
-				"description": "Soft-delete a product — vendor only, must own the product",
-				"tags": [
-					"Products"
-				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
 			}
 		},
 		"/products/vendor/my-products": {
@@ -2782,6 +2664,124 @@
 				]
 			}
 		},
+		"/products/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ProductResponseDto"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "Product not found"
+					}
+				},
+				"description": "Get a single approved product by ID",
+				"tags": [
+					"Products"
+				],
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			},
+			"put": {
+				"operationId": "Update",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ProductResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Not your product"
+					},
+					"404": {
+						"description": "Product not found"
+					}
+				},
+				"description": "Update a product - vendor only, must own the product",
+				"tags": [
+					"Products"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/UpdateProductDto"
+							}
+						}
+					}
+				}
+			},
+			"delete": {
+				"operationId": "Remove",
+				"responses": {
+					"204": {
+						"description": "Deleted"
+					},
+					"403": {
+						"description": "Not your product"
+					},
+					"404": {
+						"description": "Product not found"
+					}
+				},
+				"description": "Soft-delete a product - vendor only, must own the product",
+				"tags": [
+					"Products"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
 		"/payments/webhook": {
 			"post": {
 				"operationId": "HandleWebhook",
@@ -2793,7 +2793,7 @@
 						"description": "Invalid signature"
 					}
 				},
-				"description": "Paystack webhook — handles all payment events.\nNo JWT required — Paystack calls this directly.",
+				"description": "Paystack webhook - handles all payment events.\nNo JWT required - Paystack calls this directly.",
 				"tags": [
 					"Payments"
 				],
@@ -2822,7 +2822,7 @@
 						"description": "Payment initialization failed"
 					}
 				},
-				"description": "Checkout — validates cart, creates order, initializes Paystack payment.\nReturns the order with a paymentUrl — redirect the customer there to pay.",
+				"description": "Checkout - validates cart, creates order, initializes Paystack payment.\nReturns the order with a paymentUrl - redirect the customer there to pay.",
 				"tags": [
 					"Orders"
 				],
@@ -2939,48 +2939,6 @@
 				]
 			}
 		},
-		"/orders/{id}": {
-			"get": {
-				"operationId": "GetOne",
-				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {
-									"$ref": "#/components/schemas/OrderResponseDto"
-								}
-							}
-						}
-					},
-					"403": {
-						"description": "Access denied"
-					},
-					"404": {
-						"description": "Order not found"
-					}
-				},
-				"description": "Get a single order by ID.\nCustomers can only view their own orders.\nAdmins can view any order.",
-				"tags": [
-					"Orders"
-				],
-				"security": [
-					{
-						"jwt": []
-					}
-				],
-				"parameters": [
-					{
-						"in": "path",
-						"name": "id",
-						"required": true,
-						"schema": {
-							"type": "string"
-						}
-					}
-				]
-			}
-		},
 		"/orders/admin/all": {
 			"get": {
 				"operationId": "GetAllOrders",
@@ -3031,6 +2989,48 @@
 						"in": "query",
 						"name": "status",
 						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					}
+				]
+			}
+		},
+		"/orders/{id}": {
+			"get": {
+				"operationId": "GetOne",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/OrderResponseDto"
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Access denied"
+					},
+					"404": {
+						"description": "Order not found"
+					}
+				},
+				"description": "Get a single order by ID.\nCustomers can only view their own orders.\nAdmins can view any order.",
+				"tags": [
+					"Orders"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "id",
+						"required": true,
 						"schema": {
 							"type": "string"
 						}
@@ -3134,7 +3134,7 @@
 						"description": "Slug already exists"
 					}
 				},
-				"description": "Create a new category — admin only",
+				"description": "Create a new category - admin only",
 				"tags": [
 					"Categories"
 				],
@@ -3207,7 +3207,7 @@
 						"description": "Category not found"
 					}
 				},
-				"description": "Update a category — admin only",
+				"description": "Update a category - admin only",
 				"tags": [
 					"Categories"
 				],
@@ -3247,7 +3247,7 @@
 						"description": "Category not found"
 					}
 				},
-				"description": "Delete a category — admin only",
+				"description": "Delete a category - admin only",
 				"tags": [
 					"Categories"
 				],
@@ -3611,7 +3611,7 @@
 						"description": "Admins only"
 					}
 				},
-				"description": "Get all users with optional role and search filters — admin only",
+				"description": "Get all users with optional role and search filters - admin only",
 				"tags": [
 					"Admin"
 				],
@@ -3677,7 +3677,7 @@
 						"description": "User not found"
 					}
 				},
-				"description": "Suspend or reactivate a user account — admin only",
+				"description": "Suspend or reactivate a user account - admin only",
 				"tags": [
 					"Admin"
 				],
@@ -3724,7 +3724,7 @@
 						"description": "Admins only"
 					}
 				},
-				"description": "Get all orders platform-wide — admin only",
+				"description": "Get all orders platform-wide - admin only",
 				"tags": [
 					"Admin"
 				],
@@ -3781,7 +3781,7 @@
 						"description": "Admins only"
 					}
 				},
-				"description": "Get low stock alerts — products at or below the threshold — admin only",
+				"description": "Get low stock alerts - products at or below the threshold - admin only",
 				"tags": [
 					"Admin"
 				],
@@ -3821,7 +3821,7 @@
 						"description": "Admins only"
 					}
 				},
-				"description": "Get platform analytics — admin only",
+				"description": "Get platform analytics - admin only",
 				"tags": [
 					"Admin"
 				],
@@ -3849,7 +3849,7 @@
 						"description": "Admins only"
 					}
 				},
-				"description": "Get products pending review — admin only",
+				"description": "Get products pending review - admin only",
 				"tags": [
 					"Admin"
 				],
@@ -3899,7 +3899,7 @@
 						"description": "Product not found"
 					}
 				},
-				"description": "Approve, reject, or flag a product listing — admin only",
+				"description": "Approve, reject, or flag a product listing - admin only",
 				"tags": [
 					"Admin"
 				],

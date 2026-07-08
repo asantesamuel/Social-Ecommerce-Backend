@@ -1,5 +1,4 @@
 import { DataSource } from 'typeorm';
-import * as dotenv from 'dotenv';
 import { Cart } from '../entities/Cart';
 import { CartItem } from '../entities/CartItem';
 import { Category } from '../entities/Category';
@@ -13,12 +12,11 @@ import { User } from '../entities/User';
 import { VendorDocument } from '../entities/VendorDocument';
 import { VendorOnboardingFee } from '../entities/VendorOnboardingFee';
 import { VendorProfile } from '../entities/VendorProfile';
-dotenv.config();
+import { env, isDev, isTest } from './env';
 
-const isTest = process.env.NODE_ENV === 'test';
 const databaseUrl = isTest
-  ? process.env.DATABASE_URL_TEST
-  : process.env.DATABASE_URL;
+  ? env.DATABASE_URL_TEST
+  : env.DATABASE_URL;
 
 if (!databaseUrl) {
   throw new Error(
@@ -49,8 +47,8 @@ export const AppDataSource = new DataSource({
   migrations: [__dirname + '/../migrations/*.{ts,js}'],
   // Keep local development convenient while tests use an isolated database.
   // Production must always use migrations.
-  synchronize: isTest || process.env.NODE_ENV === 'development',
-  logging: process.env.TYPEORM_LOGGING === 'true'
+  synchronize: isTest || isDev,
+  logging: env.TYPEORM_LOGGING === 'true'
     ? ['query', 'error', 'schema', 'warn', 'info', 'log']
     : ['error', 'warn'],
 });

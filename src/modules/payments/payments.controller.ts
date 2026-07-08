@@ -11,8 +11,8 @@ export class PaymentsController extends Controller {
   private service = new PaymentsService();
 
   /**
-   * Paystack webhook — handles all payment events.
-   * No JWT required — Paystack calls this directly.
+   * Paystack webhook - handles all payment events.
+   * No JWT required - Paystack calls this directly.
    */
   @Post('webhook')
   @SuccessResponse(200, 'OK')
@@ -20,7 +20,7 @@ export class PaymentsController extends Controller {
   async handleWebhook(@Request() req: ExpressRequest): Promise<void> {
     const signature = req.headers['x-paystack-signature'] as string;
 
-    if (!this.service.verifyWebhookSignature(req.body, signature)) {
+    if (!this.service.verifyWebhookSignature(req.body, signature, req.rawBody)) {
       this.setStatus(400);
       return;
     }

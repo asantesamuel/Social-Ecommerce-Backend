@@ -1,15 +1,13 @@
 import axios from 'axios';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { env } from './env';
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY as string;
 const BASE_URL = 'https://api.paystack.co';
 
 // Reusable axios instance with Paystack auth header
 export const paystackClient = axios.create({
   baseURL: BASE_URL,
   headers: {
-    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+    Authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}`,
     'Content-Type': 'application/json',
   },
 });
@@ -51,7 +49,7 @@ export interface VerifyTransactionResponse {
   };
 }
 
-// Initialize a new transaction — returns a payment URL
+// Initialize a new transaction - returns a payment URL
 export async function initializeTransaction(
   payload: InitializeTransactionPayload
 ): Promise<InitializeTransactionResponse> {
@@ -90,8 +88,8 @@ export function generateReference(orderId: string): string {
 }
 
 // Convert major currency unit to smallest unit
-// GHS 10.50 → 1050 pesewas
-// NGN 500   → 50000 kobo
+// GHS 10.50 -> 1050 pesewas
+// NGN 500   -> 50000 kobo
 export function toSmallestUnit(amount: number): number {
   return Math.round(amount * 100);
 }

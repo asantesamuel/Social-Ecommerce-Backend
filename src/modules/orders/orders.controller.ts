@@ -19,8 +19,8 @@ export class OrdersController extends Controller {
   private service = new OrdersService();
 
   /**
-   * Checkout — validates cart, creates order, initializes Paystack payment.
-   * Returns the order with a paymentUrl — redirect the customer there to pay.
+   * Checkout - validates cart, creates order, initializes Paystack payment.
+   * Returns the order with a paymentUrl - redirect the customer there to pay.
    */
   @Post('checkout')
   @SuccessResponse(201, 'Order created')
@@ -61,6 +61,20 @@ export class OrdersController extends Controller {
   }
 
   /**
+   * Admin: get all orders platform-wide with optional status filter
+   */
+  @Get('admin/all')
+  @Response(403, 'Admins only')
+  async getAllOrders(
+    @Request() req: ExpressRequest,
+    @Query() page?:   number,
+    @Query() limit?:  number,
+    @Query() status?: string
+  ): Promise<OrderListResponseDto> {
+    return this.service.findAllOrders(req.user!, page, limit, status);
+  }
+
+  /**
    * Get a single order by ID.
    * Customers can only view their own orders.
    * Admins can view any order.
@@ -73,20 +87,6 @@ export class OrdersController extends Controller {
     @Request() req: ExpressRequest
   ): Promise<OrderResponseDto> {
     return this.service.findOne(id, req.user!);
-  }
-
-  /**
-   * Admin: get all orders platform-wide with optional status filter
-   */
-  @Get('admin/all')
-  @Response(403, 'Admins only')
-  async getAllOrders(
-    @Request() req: ExpressRequest,
-    @Query() page?:   number,
-    @Query() limit?:  number,
-    @Query() status?: string
-  ): Promise<OrderListResponseDto> {
-    return this.service.findAllOrders(page, limit, status);
   }
 
   /**

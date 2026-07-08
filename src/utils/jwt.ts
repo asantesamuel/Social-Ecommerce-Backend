@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
-import * as dotenv from 'dotenv';
 import crypto from 'crypto';
-dotenv.config();
+import { env } from '../config/env';
 
 export interface JwtPayload {
   sub: string;
@@ -11,13 +10,13 @@ export interface JwtPayload {
 }
 
 export function signAccessToken(payload: JwtPayload): string {
-  return jwt.sign({ ...payload, jti: crypto.randomUUID() }, process.env.JWT_ACCESS_SECRET as string, {
+  return jwt.sign({ ...payload, jti: crypto.randomUUID() }, env.JWT_ACCESS_SECRET, {
     expiresIn: '15m',
   });
 }
 
 export function signRefreshToken(payload: JwtPayload): string {
-  return jwt.sign({ ...payload, jti: crypto.randomUUID() }, process.env.JWT_REFRESH_SECRET as string, {
+  return jwt.sign({ ...payload, jti: crypto.randomUUID() }, env.JWT_REFRESH_SECRET, {
     expiresIn: '7d',
   });
 }
@@ -25,13 +24,13 @@ export function signRefreshToken(payload: JwtPayload): string {
 export function verifyAccessToken(token: string): JwtPayload {
   return jwt.verify(
     token,
-    process.env.JWT_ACCESS_SECRET as string
+    env.JWT_ACCESS_SECRET
   ) as JwtPayload;
 }
 
 export function verifyRefreshToken(token: string): JwtPayload {
   return jwt.verify(
     token,
-    process.env.JWT_REFRESH_SECRET as string
+    env.JWT_REFRESH_SECRET
   ) as JwtPayload;
 }

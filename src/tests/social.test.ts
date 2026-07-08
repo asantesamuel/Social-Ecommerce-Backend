@@ -16,7 +16,7 @@ describe('Social API Integration Tests', () => {
       .post('/social/friends/request')
       .set('Authorization', `Bearer ${userToken}`)
       .send({
-        friendId: dummyProductId
+        addresseeId: dummyProductId
       });
       
     expect([201, 404]).toContain(res.status); // 404 if friendId does not exist

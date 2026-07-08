@@ -1,11 +1,10 @@
 import 'reflect-metadata';
-import * as dotenv from 'dotenv';
-dotenv.config();
 
 import { createApp } from './app';
 import { AppDataSource } from './config/database';
+import { env } from './config/env';
 
-const PORT = process.env.PORT || 3000;
+const PORT = env.PORT;
 
 async function bootstrap() {
   await AppDataSource.initialize();

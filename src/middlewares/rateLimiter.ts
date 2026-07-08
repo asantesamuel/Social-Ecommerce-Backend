@@ -1,12 +1,10 @@
 import rateLimit, { MemoryStore } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import Redis from 'ioredis';
+import { env, isDev, isTest } from '../config/env';
 
-// Reuse a single Redis instance
-export const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
-
-const isTest = process.env.NODE_ENV === 'test';
-const isDev = process.env.NODE_ENV === 'development';
+// Reuse a single Redis instance for both request limits and failed-login counts.
+export const redisClient = new Redis(env.REDIS_URL);
 
 const createRateLimitStore = (prefix: string) => {
   return isTest
