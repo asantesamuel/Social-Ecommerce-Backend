@@ -1,7 +1,7 @@
-import rateLimit, { MemoryStore } from 'express-rate-limit';
-import { RedisStore } from 'rate-limit-redis';
-import Redis from 'ioredis';
-import { env, isDev, isTest } from '../config/env';
+import rateLimit, { MemoryStore } from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
+import Redis from "ioredis";
+import { env, isDev, isTest } from "../config/env";
 
 interface FailedLoginStore {
   get(key: string): Promise<string | null>;
@@ -12,7 +12,10 @@ interface FailedLoginStore {
 }
 
 class MemoryFailedLoginStore implements FailedLoginStore {
-  private entries = new Map<string, { value: number; expiresAt: number | null }>();
+  private entries = new Map<
+    string,
+    { value: number; expiresAt: number | null }
+  >();
 
   private getEntry(key: string) {
     const entry = this.entries.get(key);
@@ -64,13 +67,21 @@ class MemoryFailedLoginStore implements FailedLoginStore {
   }
 }
 
-const shouldUseRedis = !isTest && !isDev;
+const shouldUseRedis = !isTest && Boolean(env.REDIS_URL);
 
 // Redis is required for production-like environments. Development and tests use
-// in-memory stores so the API can run locally without a Redis service.
-export const redisClient = shouldUseRedis ? new Redis(env.REDIS_URL) : null;
+// in-memory stores when no Redis URL is configured.
+export const redisClient = shouldUseRedis
+  ? new Redis(env.REDIS_URL!, {
+      maxRetriesPerRequest: 3,
+      retryStrategy: (retries) => {
+        if (retries > 5) return null;
+        return Math.min(retries * 200, 2000);
+      },
+    })
+  : null;
 
-redisClient?.on('error', (error) => {
+redisClient?.on("error", (error) => {
   console.error(`Redis connection error: ${error.message}`);
 });
 
@@ -83,7 +94,7 @@ const createRateLimitStore = (prefix: string) => {
     : new RedisStore({
         prefix,
         sendCommand: (...args: string[]) => {
-          if (typeof redisClient.call === 'function') {
+          if (typeof redisClient.call === "function") {
             return redisClient.call(args[0], ...args.slice(1)) as any;
           }
           return (redisClient as any)[args[0].toLowerCase()](...args.slice(1));
@@ -93,24 +104,25 @@ const createRateLimitStore = (prefix: string) => {
 
 // Applied globally to all /auth/* routes
 export const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: (isTest || isDev) ? 5000 : 30,
+  windowMs: 15 * 60 * 1000,
+  max: isTest || isDev ? 5000 : 30,
   standardHeaders: true,
   legacyHeaders: false,
-  store: createRateLimitStore('rl:auth:'),
+  store: createRateLimitStore("rl:auth:"),
   message: {
-    message: 'Too many requests from this IP. Please try again in 15 minutes.',
+    message: "Too many requests from this IP. Please try again in 15 minutes.",
   },
 });
 
 // Stricter limiter specifically for login
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: (isTest || isDev) ? 5000 : 10,
+  max: isTest || isDev ? 5000 : 10,
   standardHeaders: true,
   legacyHeaders: false,
-  store: createRateLimitStore('rl:login:'),
+  store: createRateLimitStore("rl:login:"),
   message: {
-    message: 'Too many login attempts from this IP. Please try again in 15 minutes.',
+    message:
+      "Too many login attempts from this IP. Please try again in 15 minutes.",
   },
 });

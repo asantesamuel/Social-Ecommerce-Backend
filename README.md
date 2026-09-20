@@ -17,8 +17,8 @@ TypeScript, TypeORM, and PostgreSQL.
 - Node.js 20 or newer
 - PostgreSQL installed locally
 - pgAdmin 4
-- Redis installed locally for rate limiting
 - Paystack and AWS credentials for payment/upload features
+- Redis is optional for local development and tests; production requires a Redis-compatible service
 
 pgAdmin is a graphical client for PostgreSQL. The PostgreSQL server must also
 be installed and running; opening pgAdmin alone does not start the database.
@@ -109,6 +109,10 @@ npm run dev
 The API runs at `http://localhost:3000` and Swagger UI is available at
 `http://localhost:3000/docs`.
 
+Redis is not required for this local workflow when `REDIS_URL` is omitted.
+Rate limiting and failed-login tracking use in-memory stores in development and
+tests. Set `REDIS_URL` in `.env` if you want to use Redis locally.
+
 ## How Database Access Works
 
 1. `src/server.ts` calls `AppDataSource.initialize()` before starting Express.
@@ -142,12 +146,11 @@ baseline or using a fresh database.
 ## Important Environment Variables
 
 - `DATABASE_URL`
-- `DATABASE_URL_TEST`
-- `REDIS_URL`
+- `DATABASE_URL_TEST` (tests/local development only)
+- `REDIS_URL` (optional in development and tests; required in production)
 - `JWT_ACCESS_SECRET`
 - `JWT_REFRESH_SECRET`
 - `PAYSTACK_SECRET_KEY`
-- `PAYSTACK_PUBLIC_KEY`
 - `AWS_REGION`
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
@@ -157,6 +160,45 @@ baseline or using a fresh database.
 - `FRONTEND_URL`
 - `VENDOR_ONBOARDING_FEE`
 - `TAX_RATE`
+
+## Render Deployment
+
+Render should use the following commands:
+
+```text
+Build Command: npm ci && npm run build
+Start Command: npm start
+```
+
+The TypeScript build generates `dist/server.js`, `dist/app.js`, and copies the
+generated `src/public/swagger.json` to `dist/public/swagger.json`, so Swagger
+remains available at `/docs` after deployment.
+
+Configure these values in Render without committing them to the repository:
+
+```text
+NODE_ENV=production
+FRONTEND_URL=<deployed frontend URL>
+DATABASE_URL=<Neon pooled PostgreSQL URL>
+JWT_ACCESS_SECRET=<secret>
+JWT_REFRESH_SECRET=<secret>
+PAYSTACK_SECRET_KEY=<secret>
+AWS_REGION=<region>
+AWS_ACCESS_KEY_ID=<secret>
+AWS_SECRET_ACCESS_KEY=<secret>
+S3_BUCKET_PRODUCTS=<bucket>
+S3_BUCKET_DOCUMENTS=<bucket>
+CLOUDFRONT_DOMAIN=<CloudFront URL>
+VENDOR_ONBOARDING_FEE=5000
+TAX_RATE=0.15
+REDIS_URL=<Render Redis or Key Value internal URL>
+```
+
+Render supplies `PORT`; it does not need to be configured manually.
+`DATABASE_URL_TEST` is not normally required in production. The backend does
+not require Neon/Vercel `PG*` or `POSTGRES_*` aliases, Stripe variables, or a
+separate Paystack webhook secret. Paystack webhook signatures are verified with
+`PAYSTACK_SECRET_KEY`.
 
 ## Troubleshooting
 
@@ -177,6 +219,20 @@ Create `ecommerce_db` in pgAdmin, then run the migrations.
 ### `getaddrinfo ENOTFOUND`
 
 Use `localhost` as the host for a locally installed PostgreSQL server.
+
+### Redis connection errors
+
+In development and tests, omit `REDIS_URL` to use the in-memory stores. In
+production, configure the actual Redis-compatible service URL; the application
+fails fast if `NODE_ENV=production` does not include `REDIS_URL`.
+
+### PostgreSQL SSL warning
+
+Neon may report a `pg-connection-string` warning about the future meaning of
+`sslmode=require`. The existing connection succeeds and currently treats the
+connection as fully verified. Do not weaken SSL verification or rewrite the
+Neon URL solely because of this warning; revisit it alongside a deliberate
+PostgreSQL driver upgrade.
 
 ### Tests connect to the wrong database
 

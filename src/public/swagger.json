@@ -2211,7 +2211,7 @@
 						"description": "File type not allowed"
 					}
 				},
-				"description": "Step 1 of 2 - Request a pre-signed S3 upload URL.\nThe client then PUTs the file directly to S3 using this URL.\nThe file never passes through the API server.",
+				"description": "Step 1 of 2 - Request a pre-signed S3 upload URL.\r\nThe client then PUTs the file directly to S3 using this URL.\r\nThe file never passes through the API server.",
 				"tags": [
 					"Uploads"
 				],
@@ -2248,7 +2248,7 @@
 						}
 					}
 				},
-				"description": "Step 2 of 2 - Confirm the upload completed and get the final URL.\nCall this after successfully uploading to S3.",
+				"description": "Step 2 of 2 - Confirm the upload completed and get the final URL.\r\nCall this after successfully uploading to S3.",
 				"tags": [
 					"Uploads"
 				],
@@ -2793,7 +2793,7 @@
 						"description": "Invalid signature"
 					}
 				},
-				"description": "Paystack webhook - handles all payment events.\nNo JWT required - Paystack calls this directly.",
+				"description": "Paystack webhook - handles all payment events.\r\nNo JWT required - Paystack calls this directly.",
 				"tags": [
 					"Payments"
 				],
@@ -2822,7 +2822,7 @@
 						"description": "Payment initialization failed"
 					}
 				},
-				"description": "Checkout - validates cart, creates order, initializes Paystack payment.\nReturns the order with a paymentUrl - redirect the customer there to pay.",
+				"description": "Checkout - validates cart, creates order, initializes Paystack payment.\r\nReturns the order with a paymentUrl - redirect the customer there to pay.",
 				"tags": [
 					"Orders"
 				],
@@ -2908,7 +2908,7 @@
 						"description": "Vendors only"
 					}
 				},
-				"description": "Get the authenticated vendor's order history\nRetrieves orders that contain products created by the vendor",
+				"description": "Get the authenticated vendor's order history\r\nRetrieves orders that contain products created by the vendor",
 				"tags": [
 					"Orders"
 				],
@@ -3017,7 +3017,7 @@
 						"description": "Order not found"
 					}
 				},
-				"description": "Get a single order by ID.\nCustomers can only view their own orders.\nAdmins can view any order.",
+				"description": "Get a single order by ID.\r\nCustomers can only view their own orders.\r\nAdmins can view any order.",
 				"tags": [
 					"Orders"
 				],
