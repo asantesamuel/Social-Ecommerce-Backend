@@ -8,13 +8,14 @@ import path from "path";
 import { RegisterRoutes } from "./routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import { authRateLimiter, loginRateLimiter } from "./middlewares/rateLimiter";
+import { env, isProd } from "./config/env";
 
 export function createApp(): Express {
   const app = express();
   app.disable("etag"); // prevent Express from running full DB queries just to confirm a 304
 
   app.use(helmet());
-  app.use(cors({ origin: true, credentials: true }));
+  app.use(cors({ origin: isProd ? env.FRONTEND_URL : true, credentials: true }));
   app.use(morgan("dev"));
 
   // Raw body for Paystack webhook signature verification
@@ -23,9 +24,15 @@ export function createApp(): Express {
     "/payments/webhook",
     express.raw({ type: "application/json" }),
     (req: any, _res: any, next: any) => {
-      // Parse body back to object after capturing raw bytes
-      req.body = JSON.parse(req.body.toString());
-      next();
+      try {
+        req.rawBody = req.body;
+        req.body = JSON.parse(req.body.toString("utf8"));
+        next();
+      } catch {
+        const error: any = new Error("Invalid JSON payload");
+        error.status = 400;
+        next(error);
+      }
     },
   );
 

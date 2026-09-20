@@ -5,6 +5,7 @@ import {
   buildCdnUrl,
   headS3Object,
 } from '../../config/s3';
+import { env } from '../../config/env';
 import { JwtPayload } from '../../utils/jwt';
 import {
   PresignUploadDto,
@@ -35,8 +36,8 @@ const MAX_SIZES: Record<string, number> = {
 export class UploadsService {
   private getBucket(folder: 'products' | 'documents' | 'avatars'): string {
     return folder === 'documents'
-      ? process.env.S3_BUCKET_DOCUMENTS as string
-      : process.env.S3_BUCKET_PRODUCTS as string;
+      ? env.S3_BUCKET_DOCUMENTS
+      : env.S3_BUCKET_PRODUCTS;
   }
 
   private getOwnedPrefix(
@@ -152,7 +153,7 @@ export class UploadsService {
   }
 
   extractFileKeyFromPublicUrl(url: string): string | null {
-    const base = process.env.CLOUDFRONT_DOMAIN as string;
+    const base = env.CLOUDFRONT_DOMAIN;
     if (!url.startsWith(base)) {
       return null;
     }

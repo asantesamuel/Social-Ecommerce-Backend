@@ -19,7 +19,7 @@ export class UploadsController extends Controller {
   private service = new UploadsService();
 
   /**
-   * Step 1 of 2 — Request a pre-signed S3 upload URL.
+   * Step 1 of 2 - Request a pre-signed S3 upload URL.
    * The client then PUTs the file directly to S3 using this URL.
    * The file never passes through the API server.
    */
@@ -34,7 +34,7 @@ export class UploadsController extends Controller {
   }
 
   /**
-   * Step 2 of 2 — Confirm the upload completed and get the final URL.
+   * Step 2 of 2 - Confirm the upload completed and get the final URL.
    * Call this after successfully uploading to S3.
    */
   @Post('confirm')

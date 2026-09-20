@@ -6,19 +6,18 @@ import {
   HeadObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { env } from './env';
 
 export const s3Client = new S3Client({
-  region: process.env.AWS_REGION as string,
+  region: env.AWS_REGION,
   credentials: {
-    accessKeyId:     process.env.AWS_ACCESS_KEY_ID as string,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+    accessKeyId:     env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
   },
 });
 
 // Generate a pre-signed URL for uploading a file directly to S3
-// The client uploads directly — bytes never touch your server
+// The client uploads directly - bytes never touch your server
 export async function getPresignedUploadUrl(
   bucket:      string,
   key:         string,
@@ -63,8 +62,7 @@ export async function headS3Object(
 
 // Build a CloudFront CDN URL for a public product image
 export function buildCdnUrl(key: string): string {
-  const domain = process.env.CLOUDFRONT_DOMAIN as string;
-  return `${domain}/${key}`;
+  return `${env.CLOUDFRONT_DOMAIN}/${key}`;
 }
 
 // Generate a unique S3 key for a file

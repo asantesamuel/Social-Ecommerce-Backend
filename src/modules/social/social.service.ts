@@ -18,7 +18,7 @@ export class SocialService {
   private cartRepo       = AppDataSource.getRepository(Cart);
   private userRepo       = AppDataSource.getRepository(User);
 
-  // ── POST /social/friends/request ──────────────────────────────────────────
+  // POST /social/friends/request
   async sendFriendRequest(
     dto:         SendFriendRequestDto,
     currentUser: JwtPayload
@@ -70,7 +70,7 @@ export class SocialService {
     return this.formatFriendship(friendship, currentUser.sub);
   }
 
-  // ── PUT /social/friends/:friendshipId/respond ─────────────────────────────
+  // PUT /social/friends/:friendshipId/respond
   async respondToRequest(
     friendshipId: string,
     dto:          RespondFriendRequestDto,
@@ -116,7 +116,7 @@ export class SocialService {
     return this.formatFriendship(friendship, currentUser.sub);
   }
 
-  // ── GET /social/friends ───────────────────────────────────────────────────
+  // GET /social/friends
   async getFriends(currentUser: JwtPayload): Promise<FriendResponseDto[]> {
     const friendships = await this.friendshipRepo
       .createQueryBuilder('f')
@@ -132,7 +132,7 @@ export class SocialService {
     return friendships.map(f => this.formatFriendship(f, currentUser.sub));
   }
 
-  // ── GET /social/friends/requests ─────────────────────────────────────────
+  // GET /social/friends/requests
   async getPendingRequests(
     currentUser: JwtPayload
   ): Promise<FriendResponseDto[]> {
@@ -145,7 +145,7 @@ export class SocialService {
     return requests.map(f => this.formatFriendship(f, currentUser.sub));
   }
 
-  // ── POST /social/cart/share ───────────────────────────────────────────────
+  // POST /social/cart/share
   async shareCart(
     dto:         ShareCartDto,
     currentUser: JwtPayload
@@ -199,7 +199,7 @@ export class SocialService {
     return this.formatSharedCart(sharedCart, cart);
   }
 
-  // ── GET /social/cart/shared-with-me ──────────────────────────────────────
+  // GET /social/cart/shared-with-me
   async getCartsSharedWithMe(
     currentUser: JwtPayload
   ): Promise<SharedCartResponseDto[]> {
@@ -217,7 +217,7 @@ export class SocialService {
     );
   }
 
-  // ── Formatters ─────────────────────────────────────────────────────────────
+  // Formatters
   private formatFriendship(
     f:      Friendship,
     myId:   string

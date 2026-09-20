@@ -59,7 +59,10 @@ describe('Checkout API Integration Tests', () => {
 
     // Calculate valid HMAC signature for mock payload
     const crypto = require('crypto');
-    const secret = process.env.PAYSTACK_SECRET_KEY || '';
+    const secret =
+      process.env.PAYSTACK_WEBHOOK_SECRET ||
+      process.env.PAYSTACK_SECRET_KEY ||
+      '';
     const hash = crypto
       .createHmac('sha512', secret)
       .update(JSON.stringify(payload))

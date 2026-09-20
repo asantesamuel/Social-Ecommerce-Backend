@@ -12,6 +12,7 @@ import {
   generateReference,
   toSmallestUnit,
 } from '../../config/paystack';
+import { TAX_RATE }             from '../../config/env';
 import { JwtPayload }           from '../../utils/jwt';
 import {
   CheckoutDto,
@@ -28,7 +29,7 @@ export class OrdersService {
   private productRepo = AppDataSource.getRepository(Product);
   private userRepo    = AppDataSource.getRepository(User);
 
-  // ── Formatter ─────────────────────────────────────────────────────────────
+  // Formatter
   private format(order: Order): OrderResponseDto {
     return {
       id:                order.id,
@@ -56,7 +57,7 @@ export class OrdersService {
     };
   }
 
-  // ── POST /orders/checkout ──────────────────────────────────────────────────
+  // POST /orders/checkout
   async checkout(
     dto: CheckoutDto,
     currentUser: JwtPayload
@@ -115,7 +116,7 @@ export class OrdersService {
       (sum, item) => sum + Number(item.unitPrice) * item.quantity,
       0
     );
-    const tax   = Math.round(subtotal * 0.15 * 100) / 100; // 15% VAT
+    const tax   = Math.round(subtotal * TAX_RATE * 100) / 100;
     const total = Math.round((subtotal + tax) * 100) / 100;
 
     // 5. Create the order row
@@ -157,7 +158,7 @@ export class OrdersService {
     });
 
     if (!paystackResponse.status) {
-      // Paystack rejected the transaction — mark order as failed
+      // Paystack rejected the transaction - mark order as failed
       order.status = OrderStatus.FAILED;
       await this.orderRepo.save(order);
       const error: any = new Error('Payment initialization failed. Please try again.');
@@ -177,7 +178,7 @@ export class OrdersService {
     return this.format({ ...order, items: orderItems });
   }
 
-  // ── Paystack webhook handler ───────────────────────────────────────────────
+  // Paystack webhook handler
   async handleWebhook(event: any): Promise<void> {
     const { event: eventType, data } = event;
 
@@ -204,7 +205,7 @@ export class OrdersService {
     }
 
     // Verify the transaction directly with Paystack API
-    // Never trust webhook data alone — always verify server-side
+    // Never trust webhook data alone - always verify server-side
     const verification = await verifyTransaction(reference);
 
     if (
@@ -234,7 +235,7 @@ export class OrdersService {
     }
   }
 
-  // ── GET /orders — user order history ──────────────────────────────────────
+  // GET /orders - user order history
   async findUserOrders(
     currentUser: JwtPayload,
     page  = 1,
@@ -259,7 +260,7 @@ export class OrdersService {
     };
   }
 
-  // ── GET /orders/vendor/my-orders ──────────────────────────────────────────
+  // GET /orders/vendor/my-orders
   async findVendorOrders(
     currentUser: JwtPayload,
     page  = 1,
@@ -289,7 +290,7 @@ export class OrdersService {
     };
   }
 
-  // ── GET /orders/:id ────────────────────────────────────────────────────────
+  // GET /orders/:id
   async findOne(
     id:          string,
     currentUser: JwtPayload
@@ -319,12 +320,19 @@ export class OrdersService {
     return this.format(order);
   }
 
-  // ── Admin: GET /orders — all orders ───────────────────────────────────────
+  // Admin: GET /orders - all orders
   async findAllOrders(
+    currentUser: JwtPayload,
     page  = 1,
     limit = 20,
     status?: string
   ): Promise<OrderListResponseDto> {
+    if (currentUser.role !== 'admin') {
+      const error: any = new Error('Only admins can view all orders');
+      error.status = 403;
+      throw error;
+    }
+
     const skip = (Math.max(1, page) - 1) * Math.min(100, limit);
 
     const qb = this.orderRepo
@@ -351,7 +359,7 @@ export class OrdersService {
     };
   }
 
-  // ── Admin: issue a refund ─────────────────────────────────────────────────
+  // Admin: issue a refund
   async refund(
     dto:         RefundDto,
     currentUser: JwtPayload
@@ -393,7 +401,7 @@ export class OrdersService {
       merchant_note: dto.reason,
     };
 
-    // Partial refund — convert to smallest unit
+    // Partial refund - convert to smallest unit
     if (dto.amount !== undefined) {
       if (dto.amount > Number(order.total)) {
         const error: any = new Error(
