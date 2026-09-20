@@ -25,7 +25,7 @@ export class AdminService {
     }
   }
 
-  // ── GET /admin/users ───────────────────────────────────────────────────────
+  // GET /admin/users
   async getAllUsers(
     currentUser: JwtPayload,
     page    = 1,
@@ -75,7 +75,7 @@ export class AdminService {
     };
   }
 
-  // ── POST /admin/users/:id/status ──────────────────────────────────────────
+  // POST /admin/users/:id/status
   async updateUserStatus(
     userId:      string,
     dto:         UpdateUserStatusDto,
@@ -103,7 +103,7 @@ export class AdminService {
     };
   }
 
-  // ── GET /admin/orders ─────────────────────────────────────────────────────
+  // GET /admin/orders
   async getAllOrders(
     currentUser: JwtPayload,
     page    = 1,
@@ -148,7 +148,7 @@ export class AdminService {
     };
   }
 
-  // ── GET /admin/inventory ──────────────────────────────────────────────────
+  // GET /admin/inventory
   async getLowStockAlerts(
     currentUser: JwtPayload,
     threshold = 10
@@ -178,7 +178,7 @@ export class AdminService {
     };
   }
 
-  // ── GET /admin/analytics ──────────────────────────────────────────────────
+  // GET /admin/analytics
   async getAnalytics(
     currentUser: JwtPayload
   ): Promise<AnalyticsResponseDto> {
@@ -292,7 +292,7 @@ export class AdminService {
     };
   }
 
-  // ── GET /admin/products/pending ──────────────────────────────────────────
+  // GET /admin/products/pending
   async getPendingProducts(
     currentUser: JwtPayload,
     page  = 1,
@@ -333,7 +333,7 @@ export class AdminService {
     };
   }
 
-  // ── POST /admin/products/:id/moderate ────────────────────────────────────
+  // POST /admin/products/:id/moderate
   async moderateProduct(
     productId:   string,
     dto:         ModerateProductDto,

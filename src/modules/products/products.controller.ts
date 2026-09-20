@@ -35,15 +35,6 @@ export class ProductsController extends Controller {
   }
 
   /**
-   * Get a single product by ID
-   */
-  @Get('{id}')
-  @Response(404, 'Product not found')
-  async getOne(@Path() id: string): Promise<ProductResponseDto> {
-    return this.service.findOne(id);
-  }
-
-  /**
    * Get all products belonging to the authenticated vendor
    */
   @Get('vendor/my-products')
@@ -57,7 +48,16 @@ export class ProductsController extends Controller {
   }
 
   /**
-   * Create a new product listing — vendor only
+   * Get a single approved product by ID
+   */
+  @Get('{id}')
+  @Response(404, 'Product not found')
+  async getOne(@Path() id: string): Promise<ProductResponseDto> {
+    return this.service.findOne(id);
+  }
+
+  /**
+   * Create a new product listing - vendor only
    */
   @Post()
   @Security('jwt')
@@ -73,7 +73,7 @@ export class ProductsController extends Controller {
   }
 
   /**
-   * Update a product — vendor only, must own the product
+   * Update a product - vendor only, must own the product
    */
   @Put('{id}')
   @Security('jwt')
@@ -88,7 +88,7 @@ export class ProductsController extends Controller {
   }
 
   /**
-   * Soft-delete a product — vendor only, must own the product
+   * Soft-delete a product - vendor only, must own the product
    */
   @Delete('{id}')
   @Security('jwt')

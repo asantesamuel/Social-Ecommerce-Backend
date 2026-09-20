@@ -1,9 +1,19 @@
 import { AppDataSource } from '../../config/database';
 import { Category } from '../../entities/Category';
+import { UserRole } from '../../entities/User';
+import { JwtPayload } from '../../utils/jwt';
 import { CreateCategoryDto, UpdateCategoryDto, CategoryResponseDto } from './categories.dto';
 
 export class CategoriesService {
   private categoryRepo = AppDataSource.getRepository(Category);
+
+  private guardAdmin(currentUser: JwtPayload): void {
+    if (currentUser.role !== UserRole.ADMIN) {
+      const error: any = new Error('Admin access required');
+      error.status = 403;
+      throw error;
+    }
+  }
 
   private format(c: Category): CategoryResponseDto {
     return {
@@ -36,7 +46,12 @@ export class CategoriesService {
     return this.format(category);
   }
 
-  async create(dto: CreateCategoryDto): Promise<CategoryResponseDto> {
+  async create(
+    dto: CreateCategoryDto,
+    currentUser: JwtPayload
+  ): Promise<CategoryResponseDto> {
+    this.guardAdmin(currentUser);
+
     // Check slug uniqueness
     const existing = await this.categoryRepo.findOne({
       where: { slug: dto.slug },
@@ -68,7 +83,13 @@ export class CategoriesService {
     return this.findOne(category.id);
   }
 
-  async update(id: string, dto: UpdateCategoryDto): Promise<CategoryResponseDto> {
+  async update(
+    id: string,
+    dto: UpdateCategoryDto,
+    currentUser: JwtPayload
+  ): Promise<CategoryResponseDto> {
+    this.guardAdmin(currentUser);
+
     const category = await this.categoryRepo.findOne({
       where: { id },
       relations: ['parent', 'children'],
@@ -119,7 +140,9 @@ export class CategoriesService {
     return this.findOne(category.id);
   }
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, currentUser: JwtPayload): Promise<void> {
+    this.guardAdmin(currentUser);
+
     const category = await this.categoryRepo.findOne({
       where: { id },
       relations: ['children'],

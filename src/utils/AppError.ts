@@ -17,7 +17,7 @@ export class AppError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  // ── Factory methods for common error types ────────────────────────────────
+  // Factory methods for common error types.
   static badRequest(message: string, details?: any): AppError {
     return new AppError(message, 400, 'BAD_REQUEST', details);
   }

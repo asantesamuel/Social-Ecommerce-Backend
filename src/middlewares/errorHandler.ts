@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidateError }                   from 'tsoa';
 import { AppError }                        from '../utils/AppError';
+import { isProd }                          from '../config/env';
 
 export interface ErrorResponse {
   success:   false;
@@ -20,7 +21,7 @@ export function errorHandler(
   const timestamp = new Date().toISOString();
   const path      = req.path;
 
-  // tsoa validation error — field-level validation failures
+  // tsoa validation error - field-level validation failures
   if (err instanceof ValidateError) {
     const response: ErrorResponse = {
       success:   false,
@@ -97,13 +98,13 @@ export function errorHandler(
     return;
   }
 
-  // Unknown error — log it and return generic response
+  // Unknown error - log it and return generic response
   console.error('Unhandled error:', err);
 
   const response: ErrorResponse = {
     success:   false,
     code:      'INTERNAL_ERROR',
-    message:   process.env.NODE_ENV === 'production'
+    message:   isProd
       ? 'An unexpected error occurred'
       : err?.message || 'Internal server error',
     timestamp,

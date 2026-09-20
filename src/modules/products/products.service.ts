@@ -40,6 +40,21 @@ export class ProductsService {
     };
   }
 
+  private async findAnyById(id: string): Promise<ProductResponseDto> {
+    const product = await this.productRepo.findOne({
+      where: { id },
+      relations: ['category', 'vendor'],
+    });
+
+    if (!product) {
+      const error: any = new Error('Product not found');
+      error.status = 404;
+      throw error;
+    }
+
+    return this.format(product);
+  }
+
   private async validateProductImageUrls(
     imageUrls: string[] | undefined,
     currentUser: JwtPayload
@@ -123,7 +138,11 @@ export class ProductsService {
 
   async findOne(id: string): Promise<ProductResponseDto> {
     const product = await this.productRepo.findOne({
-      where: { id, isActive: true },
+      where: {
+        id,
+        isActive: true,
+        approvalStatus: ProductApprovalStatus.APPROVED,
+      },
       relations: ['category', 'vendor'],
     });
     if (!product) {
@@ -136,7 +155,11 @@ export class ProductsService {
 
   async findBySlug(slug: string): Promise<ProductResponseDto> {
     const product = await this.productRepo.findOne({
-      where: { slug, isActive: true },
+      where: {
+        slug,
+        isActive: true,
+        approvalStatus: ProductApprovalStatus.APPROVED,
+      },
       relations: ['category', 'vendor'],
     });
     if (!product) {
@@ -239,7 +262,7 @@ export class ProductsService {
     }
 
     await this.productRepo.save(product);
-    return this.findOne(product.id);
+    return this.findAnyById(product.id);
   }
 
   async update(
@@ -304,7 +327,7 @@ export class ProductsService {
     }
 
     await this.productRepo.save(product);
-    return this.findOne(product.id);
+    return this.findAnyById(product.id);
   }
 
   async remove(id: string, vendorUser: JwtPayload): Promise<void> {
@@ -325,7 +348,7 @@ export class ProductsService {
       throw error;
     }
 
-    // Soft delete — set isActive false rather than removing the row
+    // Soft delete - set isActive false rather than removing the row
     // so existing order history referencing this product is preserved
     product.isActive = false;
     await this.productRepo.save(product);

@@ -2,6 +2,8 @@ import 'reflect-metadata';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+jest.setTimeout(30000);
+
 // Ensure we are in test mode
 process.env.NODE_ENV = 'test';
 

@@ -1,15 +1,84 @@
 import rateLimit, { MemoryStore } from 'express-rate-limit';
 import { RedisStore } from 'rate-limit-redis';
 import Redis from 'ioredis';
+import { env, isDev, isTest } from '../config/env';
 
-// Reuse a single Redis instance
-export const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+interface FailedLoginStore {
+  get(key: string): Promise<string | null>;
+  incr(key: string): Promise<number>;
+  expire(key: string, seconds: number): Promise<unknown>;
+  ttl(key: string): Promise<number>;
+  del(key: string): Promise<unknown>;
+}
 
-const isTest = process.env.NODE_ENV === 'test';
-const isDev = process.env.NODE_ENV === 'development';
+class MemoryFailedLoginStore implements FailedLoginStore {
+  private entries = new Map<string, { value: number; expiresAt: number | null }>();
+
+  private getEntry(key: string) {
+    const entry = this.entries.get(key);
+
+    if (!entry) return null;
+
+    if (entry.expiresAt !== null && entry.expiresAt <= Date.now()) {
+      this.entries.delete(key);
+      return null;
+    }
+
+    return entry;
+  }
+
+  async get(key: string): Promise<string | null> {
+    const entry = this.getEntry(key);
+    return entry ? String(entry.value) : null;
+  }
+
+  async incr(key: string): Promise<number> {
+    const entry = this.getEntry(key);
+    const nextValue = (entry?.value ?? 0) + 1;
+    this.entries.set(key, {
+      value: nextValue,
+      expiresAt: entry?.expiresAt ?? null,
+    });
+    return nextValue;
+  }
+
+  async expire(key: string, seconds: number): Promise<number> {
+    const entry = this.getEntry(key);
+    if (!entry) return 0;
+
+    entry.expiresAt = Date.now() + seconds * 1000;
+    this.entries.set(key, entry);
+    return 1;
+  }
+
+  async ttl(key: string): Promise<number> {
+    const entry = this.getEntry(key);
+    if (!entry) return -2;
+    if (entry.expiresAt === null) return -1;
+
+    return Math.max(0, Math.ceil((entry.expiresAt - Date.now()) / 1000));
+  }
+
+  async del(key: string): Promise<number> {
+    return this.entries.delete(key) ? 1 : 0;
+  }
+}
+
+const shouldUseRedis = !isTest && !isDev;
+
+// Redis is required for production-like environments. Development and tests use
+// in-memory stores so the API can run locally without a Redis service.
+export const redisClient = shouldUseRedis ? new Redis(env.REDIS_URL) : null;
+
+redisClient?.on('error', (error) => {
+  console.error(`Redis connection error: ${error.message}`);
+});
+
+export const failedLoginStore: FailedLoginStore =
+  redisClient ?? new MemoryFailedLoginStore();
 
 const createRateLimitStore = (prefix: string) => {
-  return isTest
+  return !redisClient
     ? new MemoryStore()
     : new RedisStore({
         prefix,
