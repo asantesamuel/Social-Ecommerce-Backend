@@ -16,7 +16,7 @@ import {
   AuthResponseDto,
   RefreshResponseDto,
 } from './auth.dto';
-import { redisClient } from '../../middlewares/rateLimiter';
+import { failedLoginStore } from '../../middlewares/rateLimiter';
 
 const MAX_FAILED_ATTEMPTS = 10;
 const BLOCK_DURATION_SEC = 15 * 60; // 15 minutes
@@ -27,11 +27,11 @@ function getRateLimitKey(ip: string, email: string): string {
 
 async function checkRateLimit(ip: string, email: string): Promise<void> {
   const key = getRateLimitKey(ip, email);
-  const countStr = await redisClient.get(key);
+  const countStr = await failedLoginStore.get(key);
   if (countStr) {
     const count = parseInt(countStr, 10);
     if (count >= MAX_FAILED_ATTEMPTS) {
-      const ttl = await redisClient.ttl(key);
+      const ttl = await failedLoginStore.ttl(key);
       const minutesLeft = Math.max(1, Math.ceil(ttl / 60));
       const error: any = new Error(
         `Too many failed attempts. Try again in ${minutesLeft} minute(s).`
@@ -44,13 +44,13 @@ async function checkRateLimit(ip: string, email: string): Promise<void> {
 
 async function recordFailedAttempt(ip: string, email: string): Promise<void> {
   const key = getRateLimitKey(ip, email);
-  await redisClient.incr(key);
-  await redisClient.expire(key, BLOCK_DURATION_SEC);
+  await failedLoginStore.incr(key);
+  await failedLoginStore.expire(key, BLOCK_DURATION_SEC);
 }
 
 async function clearFailedAttempts(ip: string, email: string): Promise<void> {
   const key = getRateLimitKey(ip, email);
-  await redisClient.del(key);
+  await failedLoginStore.del(key);
 }
 
 export class AuthService {
