@@ -8,7 +8,9 @@ import swaggerDocument from "./public/swagger.json";
 import { RegisterRoutes } from "./routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import { authRateLimiter, loginRateLimiter } from "./middlewares/rateLimiter";
-import { env, isProd } from "./config/env";
+import { env } from "./config/env";
+import { isAllowedFrontendOrigin } from "./config/frontendOrigins";
+import { AppError } from "./utils/AppError";
 
 export function createApp(): Express {
   const app = express();
@@ -16,7 +18,17 @@ export function createApp(): Express {
 
   app.use(helmet());
   app.use(
-    cors({ origin: isProd ? env.FRONTEND_URL : true, credentials: true }),
+    cors({
+      origin: (origin, callback) => {
+        if (isAllowedFrontendOrigin(origin, env.FRONTEND_URLS)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(AppError.forbidden("Origin is not allowed by CORS"));
+      },
+      credentials: true,
+    }),
   );
   app.use(morgan("dev"));
 

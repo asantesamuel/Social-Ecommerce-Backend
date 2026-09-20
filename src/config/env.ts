@@ -1,5 +1,9 @@
 import { z } from "zod";
 import * as dotenv from "dotenv";
+import {
+  DEFAULT_FRONTEND_URLS,
+  parseFrontendUrls,
+} from "./frontendOrigins";
 
 dotenv.config();
 
@@ -10,9 +14,19 @@ const schema = z
       .enum(["development", "test", "production"])
       .default("development"),
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-    FRONTEND_URL: z
+    FRONTEND_URLS: z
       .string()
-      .url("FRONTEND_URL must be a valid URL")
+      .transform((value, context) => {
+        try {
+          return parseFrontendUrls(value);
+        } catch (error) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: error instanceof Error ? error.message : "Invalid frontend origins",
+          });
+          return z.NEVER;
+        }
+      })
       .optional(),
 
     // Database
@@ -60,11 +74,11 @@ const schema = z
     TAX_RATE: z.coerce.number().min(0).max(1).default(0.15),
   })
   .superRefine((values, context) => {
-    if (values.NODE_ENV === "production" && !values.FRONTEND_URL) {
+    if (values.NODE_ENV === "production" && !values.FRONTEND_URLS) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["FRONTEND_URL"],
-        message: "FRONTEND_URL is required when NODE_ENV=production",
+        path: ["FRONTEND_URLS"],
+        message: "FRONTEND_URLS is required when NODE_ENV=production",
       });
     }
 
@@ -91,7 +105,7 @@ if (!parsed.success) {
 
 export const env = {
   ...parsed.data,
-  FRONTEND_URL: parsed.data.FRONTEND_URL ?? "http://localhost:5173",
+  FRONTEND_URLS: parsed.data.FRONTEND_URLS ?? [...DEFAULT_FRONTEND_URLS],
 };
 
 export const isDev = env.NODE_ENV === "development";

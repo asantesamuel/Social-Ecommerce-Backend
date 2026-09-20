@@ -157,7 +157,7 @@ baseline or using a fresh database.
 - `S3_BUCKET_PRODUCTS`
 - `S3_BUCKET_DOCUMENTS`
 - `CLOUDFRONT_DOMAIN`
-- `FRONTEND_URL`
+- `FRONTEND_URLS` (comma-separated allowed frontend origins)
 - `VENDOR_ONBOARDING_FEE`
 - `TAX_RATE`
 
@@ -178,7 +178,7 @@ Configure these values in Render without committing them to the repository:
 
 ```text
 NODE_ENV=production
-FRONTEND_URL=<deployed frontend URL>
+FRONTEND_URLS=https://frontend-one.vercel.app,https://frontend-two.vercel.app,https://frontend-three.vercel.app
 DATABASE_URL=<Neon pooled PostgreSQL URL>
 JWT_ACCESS_SECRET=<secret>
 JWT_REFRESH_SECRET=<secret>
