@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build:routes": "tsoa spec-and-routes",
-    "build": "npm run build:routes && tsc",
+    "build": "npm run build:routes && tsc -p tsconfig.build.json",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "start": "node dist/server.js",
     "test": "jest --runInBand",
