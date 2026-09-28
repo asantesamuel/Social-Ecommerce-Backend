@@ -15,6 +15,7 @@
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/config/database.ts",
     "migration:run:prod": "typeorm migration:run -d dist/config/database.js",
     "migration:show:prod": "typeorm migration:show -d dist/config/database.js",
+    "seed:users": "ts-node src/scripts/seedUsers.ts",
     "db:check": "node db_test.js",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"src/**/*.ts\""

@@ -135,7 +135,16 @@ npm run db:check
 npm test
 npm run test:coverage
 npm run lint
+
+# Seed customer, vendor, and admin accounts
+$env:SEED_USER_PASSWORD='YourStrongSeedPassword123!'
+npm run seed:users
 ```
+
+The role seed command is idempotent for `customer@gmail.com`,
+`vendor@gmail.com`, and `admin@gmail.com`. It updates those accounts to the
+requested roles and creates the vendor profile when it is missing. Keep the
+seed password in the shell or environment, not in source control.
 
 Migration commands still exist for production migration work, but the current
 local development database was originally created by TypeORM synchronization
