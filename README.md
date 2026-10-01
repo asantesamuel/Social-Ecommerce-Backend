@@ -113,6 +113,11 @@ Redis is not required for this local workflow when `REDIS_URL` is omitted.
 Rate limiting and failed-login tracking use in-memory stores in development and
 tests. Set `REDIS_URL` in `.env` if you want to use Redis locally.
 
+To enable cross-domain authentication handoff locally, configure exact callback
+URLs and a different server-only secret for each dashboard. HTTP callbacks are
+accepted only for localhost in development and tests. Generate each secret with
+at least 32 random bytes and never expose it through frontend JavaScript.
+
 ## How Database Access Works
 
 1. `src/server.ts` calls `AppDataSource.initialize()` before starting Express.
@@ -159,6 +164,11 @@ baseline or using a fresh database.
 - `REDIS_URL` (optional in development and tests; required in production)
 - `JWT_ACCESS_SECRET`
 - `JWT_REFRESH_SECRET`
+- `AUTH_HANDOFF_CODE_TTL_SECONDS` (30-300 seconds; defaults to 60)
+- `AUTH_HANDOFF_ADMIN_CALLBACK_URL`
+- `AUTH_HANDOFF_VENDOR_CALLBACK_URL`
+- `AUTH_HANDOFF_ADMIN_CLIENT_SECRET` (server-only; at least 32 bytes)
+- `AUTH_HANDOFF_VENDOR_CLIENT_SECRET` (server-only; at least 32 bytes)
 - `PAYSTACK_SECRET_KEY`
 - `AWS_REGION`
 - `AWS_ACCESS_KEY_ID`
@@ -191,6 +201,11 @@ FRONTEND_URLS=https://frontend-one.vercel.app,https://frontend-two.vercel.app,ht
 DATABASE_URL=<Neon pooled PostgreSQL URL>
 JWT_ACCESS_SECRET=<secret>
 JWT_REFRESH_SECRET=<secret>
+AUTH_HANDOFF_CODE_TTL_SECONDS=60
+AUTH_HANDOFF_ADMIN_CALLBACK_URL=https://admin-app.vercel.app/auth/callback
+AUTH_HANDOFF_VENDOR_CALLBACK_URL=https://vendor-app.vercel.app/auth/callback
+AUTH_HANDOFF_ADMIN_CLIENT_SECRET=<unique-random-server-secret>
+AUTH_HANDOFF_VENDOR_CLIENT_SECRET=<different-random-server-secret>
 PAYSTACK_SECRET_KEY=<secret>
 AWS_REGION=<region>
 AWS_ACCESS_KEY_ID=<secret>
@@ -208,6 +223,11 @@ Render supplies `PORT`; it does not need to be configured manually.
 not require Neon/Vercel `PG*` or `POSTGRES_*` aliases, Stripe variables, or a
 separate Paystack webhook secret. Paystack webhook signatures are verified with
 `PAYSTACK_SECRET_KEY`.
+
+Production startup fails if either handoff callback or client secret is absent.
+Production callbacks must be exact HTTPS URLs with no query, fragment, or
+wildcard. Keep all three deployed frontend origins in `FRONTEND_URLS`; callback
+registration does not replace CORS configuration.
 
 ## Troubleshooting
 

@@ -7,7 +7,43 @@ import {
 
 dotenv.config();
 
-const schema = z
+const HANDOFF_SECRET_MIN_BYTES = 32;
+
+function validateHandoffCallbackUrl(
+  value: string,
+  nodeEnv: "development" | "test" | "production",
+): string | null {
+  let url: URL;
+
+  try {
+    url = new URL(value);
+  } catch {
+    return "must be an absolute URL";
+  }
+
+  if (url.username || url.password) {
+    return "must not include URL credentials";
+  }
+
+  if (url.search || url.hash || value.includes("*")) {
+    return "must be an exact URL without query parameters, fragments, or wildcards";
+  }
+
+  if (nodeEnv === "production") {
+    return url.protocol === "https:"
+      ? null
+      : "must use https:// when NODE_ENV=production";
+  }
+
+  if (url.protocol === "https:") return null;
+
+  const loopbackHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
+  return url.protocol === "http:" && loopbackHosts.has(url.hostname)
+    ? null
+    : "must use https:// or an exact http:// localhost URL";
+}
+
+export const environmentSchema = z
   .object({
     // App
     NODE_ENV: z
@@ -44,6 +80,30 @@ const schema = z
     JWT_REFRESH_SECRET: z
       .string()
       .min(32, "JWT_REFRESH_SECRET must be at least 32 characters"),
+
+    // Cross-domain authentication handoff
+    AUTH_HANDOFF_CODE_TTL_SECONDS: z.coerce
+      .number()
+      .int()
+      .min(30)
+      .max(300)
+      .default(60),
+    AUTH_HANDOFF_ADMIN_CALLBACK_URL: z.string().optional(),
+    AUTH_HANDOFF_VENDOR_CALLBACK_URL: z.string().optional(),
+    AUTH_HANDOFF_ADMIN_CLIENT_SECRET: z
+      .string()
+      .refine(
+        (value) => Buffer.byteLength(value, "utf8") >= HANDOFF_SECRET_MIN_BYTES,
+        "AUTH_HANDOFF_ADMIN_CLIENT_SECRET must be at least 32 bytes",
+      )
+      .optional(),
+    AUTH_HANDOFF_VENDOR_CLIENT_SECRET: z
+      .string()
+      .refine(
+        (value) => Buffer.byteLength(value, "utf8") >= HANDOFF_SECRET_MIN_BYTES,
+        "AUTH_HANDOFF_VENDOR_CLIENT_SECRET must be at least 32 bytes",
+      )
+      .optional(),
 
     // Paystack
     PAYSTACK_SECRET_KEY: z
@@ -89,9 +149,70 @@ const schema = z
         message: "REDIS_URL is required when NODE_ENV=production",
       });
     }
+
+    const requiredProductionHandoffValues = [
+      "AUTH_HANDOFF_ADMIN_CALLBACK_URL",
+      "AUTH_HANDOFF_VENDOR_CALLBACK_URL",
+      "AUTH_HANDOFF_ADMIN_CLIENT_SECRET",
+      "AUTH_HANDOFF_VENDOR_CLIENT_SECRET",
+    ] as const;
+
+    if (values.NODE_ENV === "production") {
+      requiredProductionHandoffValues.forEach((key) => {
+        if (!values[key]) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: `${key} is required when NODE_ENV=production`,
+          });
+        }
+      });
+    }
+
+    const callbackEntries = [
+      ["AUTH_HANDOFF_ADMIN_CALLBACK_URL", values.AUTH_HANDOFF_ADMIN_CALLBACK_URL],
+      ["AUTH_HANDOFF_VENDOR_CALLBACK_URL", values.AUTH_HANDOFF_VENDOR_CALLBACK_URL],
+    ] as const;
+
+    callbackEntries.forEach(([key, value]) => {
+      if (!value) return;
+
+      const error = validateHandoffCallbackUrl(value, values.NODE_ENV);
+      if (error) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [key],
+          message: `${key} ${error}`,
+        });
+      }
+    });
+
+    if (
+      values.AUTH_HANDOFF_ADMIN_CALLBACK_URL &&
+      values.AUTH_HANDOFF_ADMIN_CALLBACK_URL ===
+        values.AUTH_HANDOFF_VENDOR_CALLBACK_URL
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["AUTH_HANDOFF_VENDOR_CALLBACK_URL"],
+        message: "Admin and vendor handoff callbacks must be different",
+      });
+    }
+
+    if (
+      values.AUTH_HANDOFF_ADMIN_CLIENT_SECRET &&
+      values.AUTH_HANDOFF_ADMIN_CLIENT_SECRET ===
+        values.AUTH_HANDOFF_VENDOR_CLIENT_SECRET
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["AUTH_HANDOFF_VENDOR_CLIENT_SECRET"],
+        message: "Admin and vendor handoff client secrets must be different",
+      });
+    }
   });
 
-const parsed = schema.safeParse(process.env);
+const parsed = environmentSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error("\nEnvironment variable validation failed:\n");
