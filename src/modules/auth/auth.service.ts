@@ -101,28 +101,7 @@ export class AuthService {
       await this.vendorRepo.save(vendorProfile);
     }
 
-    const payload = { sub: user.id, email: user.email, role: user.role };
-    const accessToken = signAccessToken(payload);
-    const refreshToken = signRefreshToken(payload);
-
-    const tokenEntity = this.refreshTokenRepo.create({
-      token: refreshToken,
-      user,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    });
-    await this.refreshTokenRepo.save(tokenEntity);
-
-    return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
-    };
+    return this.issueSessionForUser(user);
   }
 
   async login(dto: LoginDto, ip: string): Promise<AuthResponseDto> {
@@ -170,6 +149,10 @@ export class AuthService {
       expiresAt: LessThan(new Date()),
     });
 
+    return this.issueSessionForUser(user);
+  }
+
+  async issueSessionForUser(user: User): Promise<AuthResponseDto> {
     const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = signAccessToken(payload);
     const refreshToken = signRefreshToken(payload);
@@ -177,7 +160,7 @@ export class AuthService {
     const tokenEntity = this.refreshTokenRepo.create({
       token: refreshToken,
       user,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
     await this.refreshTokenRepo.save(tokenEntity);
 
