@@ -1,7 +1,7 @@
 import rateLimit, { MemoryStore } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
-import Redis from "ioredis";
-import { env, isDev, isTest } from "../config/env";
+import { isDev, isTest } from "../config/env";
+import { redisClient } from "../config/redis";
 
 interface FailedLoginStore {
   get(key: string): Promise<string | null>;
@@ -67,37 +67,21 @@ class MemoryFailedLoginStore implements FailedLoginStore {
   }
 }
 
-const shouldUseRedis = !isTest && Boolean(env.REDIS_URL);
-
-// Redis is required for production-like environments. Development and tests use
-// in-memory stores when no Redis URL is configured.
-export const redisClient = shouldUseRedis
-  ? new Redis(env.REDIS_URL!, {
-      maxRetriesPerRequest: 3,
-      retryStrategy: (retries) => {
-        if (retries > 5) return null;
-        return Math.min(retries * 200, 2000);
-      },
-    })
-  : null;
-
-redisClient?.on("error", (error) => {
-  console.error(`Redis connection error: ${error.message}`);
-});
-
 export const failedLoginStore: FailedLoginStore =
   redisClient ?? new MemoryFailedLoginStore();
 
 const createRateLimitStore = (prefix: string) => {
-  return !redisClient
+  const client = redisClient;
+
+  return !client
     ? new MemoryStore()
     : new RedisStore({
         prefix,
         sendCommand: (...args: string[]) => {
-          if (typeof redisClient.call === "function") {
-            return redisClient.call(args[0], ...args.slice(1)) as any;
+          if (typeof client.call === "function") {
+            return client.call(args[0], ...args.slice(1)) as any;
           }
-          return (redisClient as any)[args[0].toLowerCase()](...args.slice(1));
+          return (client as any)[args[0].toLowerCase()](...args.slice(1));
         },
       });
 };
