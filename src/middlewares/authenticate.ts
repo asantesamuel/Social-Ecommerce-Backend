@@ -2,6 +2,8 @@ import { Request } from 'express';
 import { verifyAccessToken, JwtPayload } from '../utils/jwt';
 import { AppDataSource } from '../config/database';
 import { User } from '../entities/User';
+import { parseAuthHandoffClientCredentials } from '../modules/auth/auth-handoff.credentials';
+import { logAuthHandoffSecurityEvent } from '../modules/auth/auth-handoff.events';
 
 export function expressAuthentication(
   req: Request,
@@ -9,6 +11,24 @@ export function expressAuthentication(
   _scopes?: string[]
 ): Promise<JwtPayload> {
   return new Promise(async (resolve, reject) => {
+    if (securityName === 'handoffClient') {
+      try {
+        const credentials = parseAuthHandoffClientCredentials(
+          req.headers.authorization
+        );
+        req.authHandoffClientCredentials = credentials;
+
+        return resolve({
+          sub: credentials.clientId,
+          email: '',
+          role: 'handoff-client',
+        });
+      } catch (error) {
+        logAuthHandoffSecurityEvent('handoff_exchange_denied', 'unknown');
+        return reject(error);
+      }
+    }
+
     if (securityName !== 'jwt') {
       return reject(new Error('Unknown security scheme'));
     }

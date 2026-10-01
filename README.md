@@ -130,6 +130,22 @@ Development uses `DATABASE_URL`. Tests use `DATABASE_URL_TEST`. Both local
 development modes synchronize entity metadata automatically; production uses
 migrations.
 
+## Cross-Domain Authentication Handoff
+
+An authenticated storefront session can create a one-time code with
+`POST /auth/handoff/authorize`. The request requires the existing Bearer access
+token, a registered `admin-dashboard` or `vendor-dashboard` client ID, a random
+state, and a PKCE S256 challenge. The API returns only the exact registered
+callback URL with the short-lived code and state.
+
+The target dashboard server exchanges that code through
+`POST /auth/handoff/exchange`. It sends `clientId`, `code`, and `codeVerifier`
+in JSON plus `Authorization: Basic base64(clientId:clientSecret)`. This exchange
+must run in the dashboard's server runtime because the client secret must never
+be included in browser code. Successful exchange returns the same access token,
+refresh token, and user shape as normal login. See `/docs` for the generated
+request and response schemas.
+
 ## Useful Commands
 
 ```powershell

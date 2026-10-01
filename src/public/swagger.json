@@ -1438,6 +1438,89 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"AuthorizeAuthHandoffResponseDto": {
+				"properties": {
+					"redirectUrl": {
+						"type": "string",
+						"description": "Exact registered dashboard callback containing only code and state."
+					},
+					"expiresIn": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"redirectUrl",
+					"expiresIn"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AuthHandoffClientIdDto": {
+				"type": "string",
+				"enum": [
+					"admin-dashboard",
+					"vendor-dashboard"
+				]
+			},
+			"AuthorizeAuthHandoffDto": {
+				"properties": {
+					"clientId": {
+						"$ref": "#/components/schemas/AuthHandoffClientIdDto"
+					},
+					"state": {
+						"type": "string",
+						"minLength": 16,
+						"maxLength": 256,
+						"pattern": "^[A-Za-z0-9._~-]+$"
+					},
+					"codeChallenge": {
+						"type": "string",
+						"minLength": 43,
+						"maxLength": 43,
+						"pattern": "^[A-Za-z0-9_-]+$"
+					},
+					"codeChallengeMethod": {
+						"type": "string",
+						"enum": [
+							"S256"
+						],
+						"nullable": false
+					}
+				},
+				"required": [
+					"clientId",
+					"state",
+					"codeChallenge",
+					"codeChallengeMethod"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ExchangeAuthHandoffDto": {
+				"properties": {
+					"clientId": {
+						"$ref": "#/components/schemas/AuthHandoffClientIdDto"
+					},
+					"code": {
+						"type": "string",
+						"minLength": 1
+					},
+					"codeVerifier": {
+						"type": "string",
+						"minLength": 43,
+						"maxLength": 128,
+						"pattern": "^[A-Za-z0-9\\-._~]+$"
+					}
+				},
+				"required": [
+					"clientId",
+					"code",
+					"codeVerifier"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"AdminUserResponseDto": {
 				"properties": {
 					"id": {
@@ -1708,6 +1791,11 @@
 				"type": "http",
 				"scheme": "bearer",
 				"bearerFormat": "JWT"
+			},
+			"handoffClient": {
+				"type": "http",
+				"scheme": "basic",
+				"description": "Server-only dashboard client ID and secret"
 			}
 		}
 	},
@@ -3587,6 +3675,101 @@
 						"application/json": {
 							"schema": {
 								"$ref": "#/components/schemas/RefreshTokenDto"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/handoff/authorize": {
+			"post": {
+				"operationId": "AuthorizeHandoff",
+				"responses": {
+					"201": {
+						"description": "Created",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AuthorizeAuthHandoffResponseDto"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Invalid handoff request"
+					},
+					"401": {
+						"description": "Missing or invalid access token"
+					},
+					"403": {
+						"description": "User is not authorized for the requested dashboard"
+					},
+					"429": {
+						"description": "Too many handoff authorization requests"
+					}
+				},
+				"description": "Create a short-lived, single-use authorization code for a registered\ndashboard. The callback URL is selected by the server and cannot be\nsupplied by the caller.",
+				"tags": [
+					"Auth"
+				],
+				"security": [
+					{
+						"jwt": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/AuthorizeAuthHandoffDto"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auth/handoff/exchange": {
+			"post": {
+				"operationId": "ExchangeHandoff",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/AuthResponseDto"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "Invalid, expired, consumed, or unauthorized handoff"
+					},
+					"403": {
+						"description": "User is no longer authorized for the dashboard"
+					},
+					"429": {
+						"description": "Too many handoff exchange requests"
+					}
+				},
+				"description": "Exchange a one-time handoff code and PKCE verifier for the existing JWT\nsession response. The dashboard server must send its client ID and secret\nthrough HTTP Basic Authorization; browser JavaScript must not call this\nendpoint directly.",
+				"tags": [
+					"Auth"
+				],
+				"security": [
+					{
+						"handoffClient": []
+					}
+				],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ExchangeAuthHandoffDto"
 							}
 						}
 					}

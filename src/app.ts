@@ -7,7 +7,12 @@ import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./public/swagger.json";
 import { RegisterRoutes } from "./routes";
 import { errorHandler } from "./middlewares/errorHandler";
-import { authRateLimiter, loginRateLimiter } from "./middlewares/rateLimiter";
+import {
+  authRateLimiter,
+  handoffAuthorizeRateLimiter,
+  handoffExchangeRateLimiter,
+  loginRateLimiter,
+} from "./middlewares/rateLimiter";
 import { env } from "./config/env";
 import { isAllowedFrontendOrigin } from "./config/frontendOrigins";
 import { AppError } from "./utils/AppError";
@@ -55,6 +60,8 @@ export function createApp(): Express {
 
   app.use("/auth", authRateLimiter);
   app.use("/auth/login", loginRateLimiter);
+  app.use("/auth/handoff/authorize", handoffAuthorizeRateLimiter);
+  app.use("/auth/handoff/exchange", handoffExchangeRateLimiter);
 
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 

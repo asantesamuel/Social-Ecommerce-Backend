@@ -44,6 +44,7 @@ export interface AuthorizeAuthHandoffResult {
 
 export interface ExchangeAuthHandoffInput {
   clientId: string;
+  authenticatedClientId: string;
   clientSecret: string;
   code: string;
   codeVerifier: string;
@@ -143,6 +144,8 @@ export class AuthHandoffService {
 
     const client = this.clients[input.clientId];
     const secretValid = client.verifySecret(input.clientSecret);
+    const authenticatedClientValid =
+      input.authenticatedClientId === input.clientId;
     const verifierValid = isValidPkceVerifier(input.codeVerifier);
     const challengeValid = verifierValid
       ? constantTimeValueMatches(
@@ -152,7 +155,12 @@ export class AuthHandoffService {
       : false;
     const clientValid = record.clientId === input.clientId;
 
-    if (!secretValid || !clientValid || !challengeValid) {
+    if (
+      !secretValid ||
+      !authenticatedClientValid ||
+      !clientValid ||
+      !challengeValid
+    ) {
       throw AppError.unauthorized(GENERIC_EXCHANGE_ERROR);
     }
 

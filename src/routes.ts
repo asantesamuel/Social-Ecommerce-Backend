@@ -533,6 +533,41 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuthorizeAuthHandoffResponseDto": {
+        "dataType": "refObject",
+        "properties": {
+            "redirectUrl": {"dataType":"string","required":true},
+            "expiresIn": {"dataType":"double","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuthHandoffClientIdDto": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["admin-dashboard"]},{"dataType":"enum","enums":["vendor-dashboard"]}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "AuthorizeAuthHandoffDto": {
+        "dataType": "refObject",
+        "properties": {
+            "clientId": {"ref":"AuthHandoffClientIdDto","required":true},
+            "state": {"dataType":"string","required":true,"validators":{"minLength":{"value":16},"maxLength":{"value":256},"pattern":{"value":"^[A-Za-z0-9._~-]+$"}}},
+            "codeChallenge": {"dataType":"string","required":true,"validators":{"minLength":{"value":43},"maxLength":{"value":43},"pattern":{"value":"^[A-Za-z0-9_-]+$"}}},
+            "codeChallengeMethod": {"dataType":"enum","enums":["S256"],"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ExchangeAuthHandoffDto": {
+        "dataType": "refObject",
+        "properties": {
+            "clientId": {"ref":"AuthHandoffClientIdDto","required":true},
+            "code": {"dataType":"string","required":true,"validators":{"minLength":{"value":1}}},
+            "codeVerifier": {"dataType":"string","required":true,"validators":{"minLength":{"value":43},"maxLength":{"value":128},"pattern":{"value":"^[A-Za-z0-9\\-._~]+$"}}},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "AdminUserResponseDto": {
         "dataType": "refObject",
         "properties": {
@@ -2110,6 +2145,70 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'logout',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAuthController_authorizeHandoff: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"AuthorizeAuthHandoffDto"},
+        };
+        app.post('/auth/handoff/authorize',
+            authenticateMiddleware([{"jwt":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(AuthController)),
+            ...(fetchMiddlewares<RequestHandler>(AuthController.prototype.authorizeHandoff)),
+
+            async function AuthController_authorizeHandoff(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAuthController_authorizeHandoff, request, response });
+
+                const controller = new AuthController();
+
+              await templateService.apiHandler({
+                methodName: 'authorizeHandoff',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 201,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsAuthController_exchangeHandoff: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"ref":"ExchangeAuthHandoffDto"},
+        };
+        app.post('/auth/handoff/exchange',
+            authenticateMiddleware([{"handoffClient":[]}]),
+            ...(fetchMiddlewares<RequestHandler>(AuthController)),
+            ...(fetchMiddlewares<RequestHandler>(AuthController.prototype.exchangeHandoff)),
+
+            async function AuthController_exchangeHandoff(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsAuthController_exchangeHandoff, request, response });
+
+                const controller = new AuthController();
+
+              await templateService.apiHandler({
+                methodName: 'exchangeHandoff',
                 controller,
                 response,
                 next,

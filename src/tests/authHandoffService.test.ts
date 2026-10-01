@@ -82,6 +82,7 @@ describe("authentication handoff service", () => {
     await expect(
       service.exchange({
         clientId: "admin-dashboard",
+        authenticatedClientId: "admin-dashboard",
         clientSecret: ADMIN_SECRET,
         code: "generated-one-time-code",
         codeVerifier: VERIFIER,
@@ -122,6 +123,7 @@ describe("authentication handoff service", () => {
     await expect(
       service.exchange({
         clientId: "admin-dashboard",
+        authenticatedClientId: "admin-dashboard",
         clientSecret: ADMIN_SECRET,
         code: "generated-one-time-code",
         codeVerifier: "wrong-verifier-that-is-still-at-least-forty-three-characters",
@@ -131,6 +133,7 @@ describe("authentication handoff service", () => {
     await expect(
       service.exchange({
         clientId: "admin-dashboard",
+        authenticatedClientId: "admin-dashboard",
         clientSecret: ADMIN_SECRET,
         code: "generated-one-time-code",
         codeVerifier: VERIFIER,
@@ -153,6 +156,7 @@ describe("authentication handoff service", () => {
     await expect(
       service.exchange({
         clientId: "admin-dashboard",
+        authenticatedClientId: "admin-dashboard",
         clientSecret: ADMIN_SECRET,
         code: "generated-one-time-code",
         codeVerifier: VERIFIER,

@@ -4,6 +4,14 @@ jest.setTimeout(30000);
 
 // Ensure we are in test mode
 process.env.NODE_ENV = "test";
+process.env.AUTH_HANDOFF_ADMIN_CALLBACK_URL =
+  "http://localhost:3001/auth/callback";
+process.env.AUTH_HANDOFF_VENDOR_CALLBACK_URL =
+  "http://localhost:3002/auth/callback";
+process.env.AUTH_HANDOFF_ADMIN_CLIENT_SECRET =
+  "test-admin-client-secret-with-at-least-32-bytes";
+process.env.AUTH_HANDOFF_VENDOR_CLIENT_SECRET =
+  "test-vendor-client-secret-with-at-least-32-bytes";
 
 import { AppDataSource } from "../config/database";
 

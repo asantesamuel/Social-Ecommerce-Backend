@@ -77,3 +77,47 @@ export interface RefreshResponseDto {
   accessToken: string;
   refreshToken: string;
 }
+
+export type AuthHandoffClientIdDto =
+  | 'admin-dashboard'
+  | 'vendor-dashboard';
+
+export interface AuthorizeAuthHandoffDto {
+  clientId: AuthHandoffClientIdDto;
+
+  /**
+   * @minLength 16
+   * @maxLength 256
+   * @pattern ^[A-Za-z0-9._~-]+$
+   */
+  state: string;
+
+  /**
+   * @minLength 43
+   * @maxLength 43
+   * @pattern ^[A-Za-z0-9_-]+$
+   */
+  codeChallenge: string;
+
+  codeChallengeMethod: 'S256';
+}
+
+export interface AuthorizeAuthHandoffResponseDto {
+  /** Exact registered dashboard callback containing only code and state. */
+  redirectUrl: string;
+  expiresIn: number;
+}
+
+export interface ExchangeAuthHandoffDto {
+  clientId: AuthHandoffClientIdDto;
+
+  /** @minLength 1 */
+  code: string;
+
+  /**
+   * @minLength 43
+   * @maxLength 128
+   * @pattern ^[A-Za-z0-9\-._~]+$
+   */
+  codeVerifier: string;
+}

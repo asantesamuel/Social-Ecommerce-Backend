@@ -110,3 +110,25 @@ export const loginRateLimiter = rateLimit({
       "Too many login attempts from this IP. Please try again in 15 minutes.",
   },
 });
+
+export const handoffAuthorizeRateLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: isTest || isDev ? 5000 : 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createRateLimitStore("rl:handoff:authorize:"),
+  message: {
+    message: "Too many handoff requests. Please try again later.",
+  },
+});
+
+export const handoffExchangeRateLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: isTest || isDev ? 5000 : 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createRateLimitStore("rl:handoff:exchange:"),
+  message: {
+    message: "Too many handoff exchange attempts. Please try again later.",
+  },
+});
