@@ -78,7 +78,7 @@ interface InMemoryEntry {
 export class InMemoryAuthHandoffStore implements AuthHandoffStore {
   private readonly entries = new Map<string, InMemoryEntry>();
 
-  constructor(private readonly now: () => number = Date.now) {}
+  constructor(private readonly now: () => number = () => Date.now()) {}
 
   async create(
     codeHash: string,
